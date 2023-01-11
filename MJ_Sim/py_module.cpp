@@ -548,7 +548,7 @@ extern "C"
 
     void wrapper_get_sensor_reading(mjtNum *Force)
     {
-        int sensorId = mj_name2id(m, mjOBJ_SENSOR, "forcesensor");
+        int sensorId = mj_name2id(m, mjOBJ_SENSOR, "force_ee");
         int adr = m->sensor_adr[sensorId];
         int dim = m->sensor_dim[sensorId];
 //        mjtNum sensor_data[dim];
