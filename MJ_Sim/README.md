@@ -4,8 +4,8 @@ This project aims at create a simulated MuJoCo C++ Fanuc robot for the usage of 
 
 ## Tested Environment
 
-- `Ubuntu 18.04`
-- `gcc version 6.5.0`
+- `Ubuntu 20.04`
+- `gcc version 9.4.0`
 
 ## Installation
 
@@ -13,11 +13,11 @@ This project aims at create a simulated MuJoCo C++ Fanuc robot for the usage of 
 
 - Pull the git repo
 
-- Obtain a license on the [MuJoCo website](https://www.roboti.us/license.html), you should receive a `mjkey.txt` file
+- ~~Obtain a license on the [MuJoCo website](https://www.roboti.us/license.html), you should receive a `mjkey.txt` file~~
 
-- Download the MuJoCo version 2.0 binaries for [Ubuntu](https://www.roboti.us/download/mujoco200_linux.zip)
+- Download the MuJoCo version 2.1.0 binaries for [Ubuntu](https://www.roboti.us/download/mujoco200_linux.zip)
 
-- Unzip the downloaded `mujoco200` directory into `~/.mujoco/mujoco200`, and place your license key (the `mjkey.txt` file) at `~/.mujoco/mjkey.txt`, `~/.mujoco/mujoco200/bin/mjkey.txt`
+- Unzip the downloaded `mujoco210` directory into `~/.mujoco/mujoco210`, ~~and place your license key (the `mjkey.txt` file) at `~/.mujoco/mjkey.txt`, `~/.mujoco/mujoco200/bin/mjkey.txt`~~
 
 - Add following lines to your `~/.bashrc`, replace `{USERNAME}` with your own path (`makefile` will heavily rely on these environment path)
 
@@ -25,7 +25,7 @@ This project aims at create a simulated MuJoCo C++ Fanuc robot for the usage of 
 
   `export MUJOCO_PATH=$MUJOCO_PATH/home/{USERNAME}/.mujoco/mujoco200/`
 
-  `export MUJOCO_LICENSE_PATH=/home/{USERNAME}/.mujoco/mujoco200/bin/mjkey.txt`
+  ~~`export MUJOCO_LICENSE_PATH=/home/{USERNAME}/.mujoco/mujoco200/bin/mjkey.txt`~~
 
 - To compile the code, type in `make` at the root of this repo, there should not be any error message, built binary files will be stored at `bin` folder, type `./bin/file_name` to run
 
