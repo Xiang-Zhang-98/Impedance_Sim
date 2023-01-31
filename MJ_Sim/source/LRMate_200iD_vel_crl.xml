@@ -2,26 +2,21 @@
 <mujoco model="fanuc_lrmate_jaw">
     <compiler angle="radian" meshdir="robot_mesh/" coordinate="local"/>
     <option timestep="0.008" gravity="0 0 -10" noslip_iterations="200" />
-    <!-- option refer to: http://www.mujoco.org/forum/index.php?threads/default-simulation-parameters-do-not-facilitate-simple-grips.2198/ -->
-    <!-- impratio="5" -->
     <size nconmax="100" njmax="500"/>
 
     <default>
         <joint armature="0.04" damping="1" limited="true" />
         <geom friction="1 .005 .0001" conaffinity="1" condim="4" contype="1" margin="0.001" />
-        
+
     </default>
 
     <actuator>
-        <motor ctrllimited="true" ctrlrange="-200.0 200.0" gear="1.0" joint="joint1" name="act1"/>
-        <motor ctrllimited="true" ctrlrange="-200.0 200.0" gear="1.0" joint="joint2" name="act2"/>
-        <motor ctrllimited="true" ctrlrange="-200.0 200.0" gear="1.0" joint="joint3" name="act3"/>
-        <motor ctrllimited="true" ctrlrange="-200.0 200.0" gear="1.0" joint="joint4" name="act4"/>
-        <motor ctrllimited="true" ctrlrange="-200.0 200.0" gear="1.0" joint="joint5" name="act5"/>
-        <motor ctrllimited="true" ctrlrange="-200.0 200.0" gear="1.0" joint="joint6" name="act6"/>
-
-        <position ctrllimited="true" ctrlrange="0 0.0435" joint="jointf1" kp="30" name="actf1"/>
-        <position ctrllimited="true" ctrlrange="0 0.0435" joint="jointf2" kp="30" name="actf2"/>
+        <velocity ctrllimited="true" ctrlrange="-0.5 0.5" joint="joint1" name="act1" kv="10"/>
+        <velocity ctrllimited="true" ctrlrange="-0.5 0.5" joint="joint2" name="act2" kv="10"/>
+        <velocity ctrllimited="true" ctrlrange="-0.5 0.5" joint="joint3" name="act3" kv="10"/>
+        <velocity ctrllimited="true" ctrlrange="-0.5 0.5" joint="joint4" name="act4" kv="10"/>
+        <velocity ctrllimited="true" ctrlrange="-0.5 0.5" joint="joint5" name="act5" kv="10"/>
+        <velocity ctrllimited="true" ctrlrange="-0.5 0.5" joint="joint6" name="act6" kv="10"/>
     </actuator>
 
     <asset>
@@ -38,7 +33,6 @@
         <mesh file="Finger2.STL" name="finger2" scale="0.001 0.001 0.001"></mesh>
         <mesh name="peg" file="peg_square_399.stl" scale="0.0095 0.0095 0.01"/>
         <mesh name="hole" file="hole_square_400.stl" scale="0.01 0.01 0.01"/>
-
         <texture name="skybox" type="skybox" builtin="gradient" rgb1=".4 .6 .8" rgb2="0 0 0" width="1024" height="1024" mark="random" markrgb="1 1 1"/>
         <texture name="texplane" type="2d" builtin="checker" rgb1=".2 .3 .4" rgb2=".1 0.15 0.2" width="512" height="512" mark="cross" markrgb=".8 .8 .8"/>
         <material name="matplane" reflectance="0.3" texture="texplane" texrepeat="1 1" texuniform="true"/>
@@ -74,26 +68,24 @@
                                     <inertial diaginertia="0.00003 0.00003 0.00005" mass="1.1700" pos="0.0 0.0 -0.08" quat="0 1 0 0"></inertial>
                                     <joint axis="1 0 0" pos="0.55 0.0 0.805" name="joint6" range="-3.1416 3.1416" type="hinge"/>
                                     <geom type="mesh" mesh="link6" name="link6" pos="0.55 0.0 0.805" euler="1.57 1.57 1.57" rgba="0 0 0 1"></geom>
-                                    <body name="peg" pos="0.55 0.0 0.805">
-                                        <site name="vertex1" pos="-0.0079 -0.0079 -0.005" type="sphere" size="0.0005" rgba="0.6 0.8 0.1 1"/>
-                                        <geom name="peg_pole" pos="0.25 0.0 0.0" type="cylinder" size="0.015 0.05" contype="1" euler="0 1.5707963 0" conaffinity="1" rgba="1 0 0 1"/>
-                                        <geom name="peg_geom" pos="0.3 0.0 0.0" type="mesh" mesh="peg" contype="1" euler="0 1.5707963 0" conaffinity="1" rgba="1 0 0 1"/>
-                                    </body>
                                     <body name="sensor">
             				            <geom type="mesh" mesh="sensor" name="sensor" pos="0.62 -0.0325 0.7725" euler="0 -1.57 0" rgba="0.7 0.7 0.7 1"></geom>
                                         <site name="ft_frame" pos="0.62 -0.0325 0.7725" euler="0 -1.57 0" size="0.01 0.01 0.01" rgba="1 0 0 1" type="sphere" group="1"/>
-					                    <body name="palm">
-                                            <geom type="mesh" mesh="palm" name="palm" pos="0.703 -0.07 0.7875" euler="0 0 1.57" rgba="0.7 0.7 0.7 1"></geom>
-                                            <body name="finger1">
-            				                    <geom type="mesh" mesh="finger1" name="finger1" solimp="0.99 0.99 0.01" solref="0.01 1" pos="0.700 -0.047 0.7875" euler="1.57 0 0" rgba="0.7 0.7 0.7 1"></geom>
-                                                <joint axis="0 1 0" pos="0 0 0" name="jointf1" damping="3" range="0 0.0435" type="slide"/>
-                                            </body>
-					                        <body name="finger2">
-            				                    <geom type="mesh" mesh="finger2" name="finger2" solimp="0.99 0.99 0.01" solref="0.01 1" pos="0.700 0.047 0.7875" euler="1.57 0 0" rgba="0.7 0.7 0.7 1"></geom>
-<!--                                                <geom name="peg_geom" pos="0.55 0.0 0.905" type="mesh" mesh="peg" contype="1" conaffinity="1" rgba="1 0 0 1"/>-->
-                                                <joint axis="0 -1 0" pos="0 0 0" name="jointf2" damping="3" range="0 0.0435" type="slide"/>
-				                            </body>
-				                        </body>
+                                        <body name="peg" pos="0.703 -0.07 0.7875">
+                                            <site name="vertex1" pos="-0.0079 -0.0079 -0.005" type="sphere" size="0.0005" rgba="0.6 0.8 0.1 1"/>
+                                            <geom name="peg_geom" type="mesh" mesh="peg" contype="1" conaffinity="1" rgba="1 0 0 1"/>
+                                        </body>
+<!--					                    <body name="palm">-->
+<!--                                            <geom type="mesh" mesh="palm" name="palm" pos="0.703 -0.07 0.7875" euler="0 0 1.57" rgba="0.7 0.7 0.7 1"></geom>-->
+<!--                                            <body name="finger1">-->
+<!--            				                    <geom type="mesh" mesh="finger1" name="finger1" solimp="0.99 0.99 0.01" solref="0.01 1" pos="0.700 -0.047 0.7875" euler="1.57 0 0" rgba="0.7 0.7 0.7 1"></geom>-->
+<!--                                                <joint axis="0 1 0" pos="0 0 0" name="jointf1" damping="3" range="0 0.0435" type="slide"/>-->
+<!--                                            </body>-->
+<!--					                        <body name="finger2">-->
+<!--            				                    <geom type="mesh" mesh="finger2" name="finger2" solimp="0.99 0.99 0.01" solref="0.01 1" pos="0.700 0.047 0.7875" euler="1.57 0 0" rgba="0.7 0.7 0.7 1"></geom>-->
+<!--                                                <joint axis="0 -1 0" pos="0 0 0" name="jointf2" damping="3" range="0 0.0435" type="slide"/>-->
+<!--				                            </body>-->
+<!--				                        </body>-->
 				                    </body>
 				                </body>
 			                </body>
@@ -104,13 +96,13 @@
         </body>
 
         <body name='object_1'>
-            <geom name='object_geom_1' type="box" pos="0.5 -0.3 0.03" quat="1 0 0 0" solimp="0.99 0.99 0.01" 
+            <geom name='object_geom_1' type="box" pos="0.5 -0.3 0.03" quat="1 0 0 0" solimp="0.99 0.99 0.01"
                   solref="0.01 1" size="0.03 0.03 0.03" density="5"/>
             <freejoint/>
         </body>
 
         <body name='object_2'>
-            <geom name='object_geom_2' type="box" pos="0.7 0.0 0.3" quat="1 0 0 0" solimp="0.99 0.99 0.01" 
+            <geom name='object_geom_2' type="box" pos="0.7 0.0 0.3" quat="1 0 0 0" solimp="0.99 0.99 0.01"
                   solref="0.01 1" size="0.05 0.05 0.05" density="5"/>
             <freejoint/>
         </body>
@@ -121,5 +113,5 @@
         <force name="force_ee" site="ft_frame"/>
         <torque name="torque_ee" site="ft_frame"/>
     </sensor>
-    
+
 </mujoco>
