@@ -6,6 +6,7 @@ import numpy as np
 from source.lrmate_kine_base import FK, IK
 import source.trajectory_cubic as traj
 import matplotlib.pyplot as plt
+import transforms3d.quaternions as trans_quat
 
 # To debug in VS Code, add the following line to launch.json under "configurations"
 # "env": {"LD_LIBRARY_PATH": "/home/{USER_NAME}/.mujoco/mujoco200/bin/"}
@@ -20,11 +21,14 @@ class mj_sim:
         self.joint_pos = np.zeros(6)
         self.joint_vel = np.zeros(6)
         self.joint_acc = np.zeros(6)
+        self.pose_vel = np.zeros(13)
         self.full_jacobian = np.zeros((6, 8))
         self.force_sensor_data = np.zeros(3)
+        self.force_offset = np.zeros(3)
 
         self.time_render = np.zeros(1)
         self.gripper_close = False
+        self.nv = 20
 
         # build a c type array to hold the return value
         self.joint_pos_holder = (ctypes.c_double * 8)(
@@ -38,34 +42,46 @@ class mj_sim:
         )
         self.time_render_holder = (ctypes.c_double * 1)(0.0)
         self.verbose_holder = (ctypes.c_bool)(False)
-        jac = [0.0] * 48
+        jac = [0.0] * 6 * self.nv
         self.jacobian_holder = (ctypes.c_double * len(jac))(*jac)
         self.force_sensor_data_holder = (ctypes.c_double * 3)(
             0.0, 0.0, 0.0
+        )
+        self.pose_vel_holder = (ctypes.c_double * 13)(
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
         )
 
         # initialize the simulation
         self.n_step = 0
         self.sim.wrapper_init()
 
+
         # initialize a PD gain, may need more effort on tunning
-        kp = np.array([17, 17, 17, 17, 17, 17])
-        kv = np.array([40, 40, 40, 40, 40, 40])
+        # kp = np.array([17, 17, 17, 17, 17, 17])
+        # kv = np.array([40, 40, 40, 40, 40, 40])
+        kp = 40.001*np.array([1, 1, 1, 1, 1, 1])
+        kv = 2*np.sqrt(kp)#np.array([40, 40, 40, 40, 40, 40])
         self.set_pd_gain(kp, kv)
+
+        # initialize admittance gains
+        self.adm_kp = 5*np.array([1, 1, 1, 1, 1, 1])
+        self.adm_m = 0.1*np.array([1, 1, 1, 1, 1, 1])
+        self.adm_kd = 2*np.sqrt(np.multiply(self.adm_kp, self.adm_m))
+        self.adm_pose_ref = np.zeros(7)
+        self.adm_vel_ref = np.zeros(6)
 
         # initialize path planning
         self.HZ = 125  # this is the frequency of c++ simulator, set in the xml file
         self.traj_pose, self.traj_vel, self.traj_acc = None, None, None
 
-        for _ in range(10):
-            self.step()
 
     def step(self):
         self.sim.wrapper_step()
         self.get_joint_states()
+        self.get_pose_vel()
         self.get_sensor_data()
-        print(self.force_sensor_data)
-        # self.get_jacobian()
+        print(self.force_sensor_data - self.force_offset)
+        self.get_jacobian()
 
     def get_sim_time(self):
         self.sim.wrapper_get_sim_time(self.time_render_holder)
@@ -83,9 +99,13 @@ class mj_sim:
         self.joint_vel = np.array(self.joint_vel_holder[:6])
         self.joint_acc = np.array(self.joint_acc_holder[:6])
 
+    def get_pose_vel(self):
+        self.sim.get_eef_pose_vel(self.pose_vel_holder)
+        self.pose_vel = np.array(self.pose_vel_holder[:13])
+
     def get_jacobian(self):
         self.sim.wrapper_eef_full_jacobian(self.jacobian_holder)
-        self.full_jacobian = np.array(self.jacobian_holder).reshape(6, 8)
+        self.full_jacobian = np.array(self.jacobian_holder).reshape(6, self.nv)
 
     def set_gripper(self, pose=0.0):
         # gripper pose: 0 for fully open; 0.042 for fully close
@@ -128,6 +148,12 @@ class mj_sim:
         )
         self.sim.wrapper_update_reference_traj(ref_joint_mj, ref_vel_mj, ref_acc_mj)
 
+    def set_joint_states(self, joint, vel, acc):
+        joint_holder = (ctypes.c_double * 8)(joint[0], joint[1], joint[2], joint[3], joint[4], joint[5], 0.0, 0.0)
+        vel_holder = (ctypes.c_double * 8)(vel[0], vel[1], vel[2], vel[3], vel[4], vel[5], 0.0, 0.0)
+        acc_holder = (ctypes.c_double * 8)(acc[0], acc[1], acc[2], acc[3], acc[4], acc[5], 0.0, 0.0)
+        self.sim.wrapper_set_joint_states(joint_holder, vel_holder, acc_holder)
+
     def set_pd_gain(self, kp, kv):
         kp_mj = (ctypes.c_double * 6)(kp[0], kp[1], kp[2], kp[3], kp[4], kp[5])
         kv_mj = (ctypes.c_double * 6)(kv[0], kv[1], kv[2], kv[3], kv[4], kv[5])
@@ -136,6 +162,19 @@ class mj_sim:
     def set_controller(self, controller_idx=0):
         controller_idx_mj = (ctypes.c_int)(controller_idx)
         self.sim.wrapper_update_controller_type(controller_idx_mj)
+
+    def force_calibration(self, H=100):
+        force_history = np.zeros([H, 3])
+        self.step()
+        self.set_reference_traj(
+            self.joint_pos, 0*self.joint_vel, 0*self.joint_acc
+        )
+        for _ in range(H):
+            self.step()
+            force_history[_, :] = self.force_sensor_data
+        self.force_offset = np.mean(force_history[int(H/2):], axis=0)
+
+
 
     def ik(self, pose):
         """
@@ -212,6 +251,39 @@ class mj_sim:
         target_acc = (target_vel - self.joint_vel) / T
         self.set_reference_traj(target_pos, target_vel, target_acc)
 
+    def admittance_control(self):
+        ## Get robot motion from desired dynamics
+
+        # process force
+        world_force = np.zeros(6)
+        eef_force = self.force_sensor_data - self.force_offset
+        eff_pos = self.pose_vel[:3]
+        eff_rotm = trans_quat.quat2mat(self.pose_vel[3:7])
+        eff_vel = self.pose_vel[7:]
+        world_force[:3] = eff_rotm@eef_force
+        world_force = np.clip(world_force, -1, 1)
+
+        # dynamics
+        e = np.zeros(6)
+        e[:3] = self.adm_pose_ref[:3] - eff_pos
+        eff_rotm_d = trans_quat.quat2mat(self.adm_pose_ref[3:7])
+        eRd = eff_rotm.T @ eff_rotm_d
+        dorn = trans_quat.mat2quat(eRd)
+        do = dorn[1:]
+        e[3:] = do
+
+        e_dot = self.adm_vel_ref - eff_vel
+        MA = world_force + np.multiply(self.adm_kp, e) + np.multiply(self.adm_kd, e_dot)
+        adm_acc = np.divide(MA, self.adm_m)
+        T = 1 / self.HZ
+        adm_vel = self.pose_vel[7:] + adm_acc * T
+        # adm_vel = self.pose_vel[7:] + np.array([0.2,0,0,0,0,0])#adm_acc * T
+
+        Full_Jacobian = sim.full_jacobian
+        Jacobian = Full_Jacobian[:6, :6]
+        target_joint_vel = np.linalg.pinv(Jacobian)@adm_vel
+        return target_joint_vel
+
     def plot_jva(self, j, v, a, axis=None):
         fig = plt.figure()
         if axis is None:
@@ -247,20 +319,33 @@ class mj_sim:
 
 if __name__ == "__main__":
     sim = mj_sim()
-    track_vel = 0
+    track_vel = 1
     random_move = 0
-    grasp_demo = 1
+    grasp_demo = 0
 
     ################################################ set velocity of the robot ################################################
     ################################################ May NEED MORE EFFORTS ################################################
     if track_vel:
+        # set init robot pose
+        init_c_pose = np.array([0.5, 0.0, 0.5, 0.0, np.pi, np.pi])
+        init_j_pose = IK(init_c_pose)
+        sim.set_joint_states(init_j_pose, 0*init_j_pose, 0*init_j_pose)
+        # Calibrate force
+        sim.force_calibration()
         j, v, a = np.zeros((1, 6)), np.zeros((1, 6)), np.zeros((1, 6))
+        sim.adm_pose_ref = sim.pose_vel[:7] + np.array([0.0, 0.0, -0.4, 0.0, 0.0, 0.0, 0.0])
         for _ in range(3):
             st = time.time()
-            target_vel = np.array([np.random.randn() * 0.5, 0.0, 0.0, 0.0, 0.0, 0.0])
-            print(target_vel)
+            # target_vel = np.array([np.random.randn() * 0.05, np.random.randn() * 0.05, np.random.randn() * 0.05, 0.0, 0.0, 0.0])
+            # target_vel = np.array(
+            #     [0.05, 0.0, 0.0, 0.0, 0.0, 0.0])
+
             while time.time() - st < 1:
-                sim.set_joint_velocity(target_vel)
+                # Full_Jacobian = sim.full_jacobian
+                # Jacobian = Full_Jacobian[:6, :6]
+                # target_joint_vel = np.linalg.pinv(Jacobian)@target_vel
+                target_joint_vel = sim.admittance_control()
+                sim.set_joint_velocity(target_joint_vel)
                 sim.step()
                 j = np.vstack((j, sim.joint_pos))
                 v = np.vstack((v, sim.joint_vel))

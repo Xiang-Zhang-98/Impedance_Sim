@@ -26,13 +26,16 @@ int controller = 0;        // controller index: 0: computed torque (track traj &
 mjtNum ref_joint[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 mjtNum ref_vel[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 mjtNum ref_acc[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+mjtNum vel_ctl_integral[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+mjtNum Full_jacobian_global[48];
 mjtNum kp[64];
 mjtNum kv[64];
+mjtNum ki[64];
 
 #define PI 3.1415926535
 
 //print variables in the control loop
-bool Verbose = false;
+bool Verbose = true;
 
 // gripper status: 0.042 gripper fully close; 0.0 fully open
 double gripper_pose = 0.0;
@@ -155,6 +158,18 @@ void extract_submatrix(mjtNum* input, mjtNum* output, int start_row, int end_row
     }
 }
 
+void eef_full_jacobian(mjtNum *Full_jacobian)
+{
+    //compute the full jacobian of the end effector(link 6)
+    mjtNum jacp[3*m->nv];
+    mjtNum jacr[3*m->nv];
+    mj_jacGeom(m, d, jacp, jacr, int(7));
+    for (int j = 0; j < 3*m->nv; j++)
+        Full_jacobian[j] = jacp[j];
+    for (int j = 0; j < 3*m->nv; j++)
+        Full_jacobian[j + 3*m->nv] = jacr[j];/**/
+}
+
 void computed_torque_control(const mjModel *m, mjData *d)
 {
     // d->ctrl controls the actuator in xml file; d->qfrc_applied torques specified in joint space
@@ -165,7 +180,8 @@ void computed_torque_control(const mjModel *m, mjData *d)
     // m->nv: number of degrees of freedom = dim(qvel)
     // m->nu: number of actuators/controls = dim(ctrl)
 
-    // ctrl = M * (ref_acc - kv*e_dot - kp*e) + qfrc_inverse
+    // ctrl = M * (ref_acc - kv*e_dot - ki*sum(e_dot)) + qfrc_inverse
+
     mj_rne(m, d, 0, d->qfrc_inverse);
     for (int i = 0; i < m->nv; i++)
         //d->qfrc_inverse[i] += - d->qfrc_passive[i] - d->qfrc_constraint[i];
@@ -182,7 +198,7 @@ void computed_torque_control(const mjModel *m, mjData *d)
     mju_mulMatVec(kpe, kp, e, 8, 8);
     mju_sub(inertial_pd, ref_acc, kve_dot, 8);
     mju_subFrom(inertial_pd, kpe, 8);
-    
+
     // mj_mulM(m, d, inertial_torque, inertial_pd); // this no longer works when there are objects in the scene
     mjtNum M[m->nv*m->nv];
     mjtNum M_robot[m->nu*m->nu];
@@ -194,13 +210,101 @@ void computed_torque_control(const mjModel *m, mjData *d)
     // set gripper ctrl
     d->ctrl[6] = gripper_pose;
     d->ctrl[7] = gripper_pose;
+}
 
+void joint_vel_control(const mjModel *m, mjData *d)
+{
+    // d->ctrl controls the actuator in xml file; d->qfrc_applied torques specified in joint space
+    // If in xml, actuators are position/velocity, then d->ctrl here means reference position/velocity
+    // d->ctrl 0-5 are joints torque's control signal; 6,7 are gripper position's control signal
+    // d->qpos, d->qvel, d->qacc are joint positions, velocities, and acculations (0-5 for arm joints; 6,7 for gripper)
+    // m->nq: number of generalized coordinates = dim(qpos)
+    // m->nv: number of degrees of freedom = dim(qvel)
+    // m->nu: number of actuators/controls = dim(ctrl)
+
+    // ctrl = M * (ref_acc - kv*e_dot - kp*e) + qfrc_inverse
+    mj_rne(m, d, 0, d->qfrc_inverse);
+    for (int i = 0; i < m->nv; i++)
+        //d->qfrc_inverse[i] += - d->qfrc_passive[i] - d->qfrc_constraint[i];
+        d->qfrc_inverse[i] += m->dof_armature[i] * d->qacc[i] - d->qfrc_passive[i] - d->qfrc_constraint[i];
+    mjtNum e_dot[8];           // theta_dot - theta_d_dot
+    mjtNum kpe_dot[8];         // kv * e_dot
+    mjtNum ki_e_int[8];             // kp * e
+    mjtNum inertial_pd[8];     // ref_acc - kv*e_dot - kp*e
+    mjtNum inertial_torque[8]; // M * (ref_acc - kv*e_dot - kp*e)
+    /*mju_sub(e, d->qpos, ref_joint, 8);*/
+    mju_sub(e_dot, d->qvel, ref_vel, 8);
+    mju_addTo(vel_ctl_integral, e_dot, 8);
+    mju_mulMatVec(kpe_dot, kp, e_dot, 8, 8);
+    mju_mulMatVec(ki_e_int, ki, vel_ctl_integral, 8, 8);
+    mju_sub(inertial_pd, ref_acc, kpe_dot, 8);
+    mju_subFrom(inertial_pd, ki_e_int, 8);
+
+    // mj_mulM(m, d, inertial_torque, inertial_pd); // this no longer works when there are objects in the scene
+    mjtNum M[m->nv*m->nv];
+    mjtNum M_robot[m->nu*m->nu];
+    mj_fullM(m, M, d->qM);
+    extract_submatrix(M, M_robot, 0, m->nu, 0, m->nu);
+    mju_mulMatVec(inertial_torque, M_robot, inertial_pd, 8, 8);
+
+    mju_add(d->ctrl, inertial_torque, d->qfrc_inverse, 8);
+    // set gripper ctrl
+    d->ctrl[6] = gripper_pose;
+    d->ctrl[7] = gripper_pose;
+}
+
+void cartesian_vel_control(const mjModel *m, mjData *d)
+{
+    // d->ctrl controls the actuator in xml file; d->qfrc_applied torques specified in joint space
+    // If in xml, actuators are position/velocity, then d->ctrl here means reference position/velocity
+    // d->ctrl 0-5 are joints torque's control signal; 6,7 are gripper position's control signal
+    // d->qpos, d->qvel, d->qacc are joint positions, velocities, and acculations (0-5 for arm joints; 6,7 for gripper)
+    // m->nq: number of generalized coordinates = dim(qpos)
+    // m->nv: number of degrees of freedom = dim(qvel)
+    // m->nu: number of actuators/controls = dim(ctrl)
+
+    // ctrl = M * (ref_acc - kv*e_dot - kp*e) + qfrc_inverse
+
+//    mjtNum Full_jacobian[48];
+//    eef_full_jacobian(Full_jacobian);
+    
+
+    mj_rne(m, d, 0, d->qfrc_inverse);
+    for (int i = 0; i < m->nv; i++)
+        //d->qfrc_inverse[i] += - d->qfrc_passive[i] - d->qfrc_constraint[i];
+        d->qfrc_inverse[i] += m->dof_armature[i] * d->qacc[i] - d->qfrc_passive[i] - d->qfrc_constraint[i];
+    mjtNum e_dot[8];           // theta_dot - theta_d_dot
+    mjtNum kpe_dot[8];         // kv * e_dot
+    mjtNum ki_e_int[8];             // kp * e
+    mjtNum inertial_pd[8];     // ref_acc - kv*e_dot - kp*e
+    mjtNum inertial_torque[8]; // M * (ref_acc - kv*e_dot - kp*e)
+    /*mju_sub(e, d->qpos, ref_joint, 8);*/
+    mju_sub(e_dot, d->qvel, ref_vel, 8);
+    mju_addTo(vel_ctl_integral, e_dot, 8);
+    mju_mulMatVec(kpe_dot, kp, e_dot, 8, 8);
+    mju_mulMatVec(ki_e_int, ki, vel_ctl_integral, 8, 8);
+    mju_sub(inertial_pd, ref_acc, kpe_dot, 8);
+    mju_subFrom(inertial_pd, ki_e_int, 8);
+
+    // mj_mulM(m, d, inertial_torque, inertial_pd); // this no longer works when there are objects in the scene
+    mjtNum M[m->nv*m->nv];
+    mjtNum M_robot[m->nu*m->nu];
+    mj_fullM(m, M, d->qM);
+    extract_submatrix(M, M_robot, 0, m->nu, 0, m->nu);
+    mju_mulMatVec(inertial_torque, M_robot, inertial_pd, 8, 8);
+
+    mju_add(d->ctrl, inertial_torque, d->qfrc_inverse, 8);
+    // set gripper ctrl
+    d->ctrl[6] = gripper_pose;
+    d->ctrl[7] = gripper_pose;
 }
 
 void cartesian_impedance_control(const mjModel *m, mjData *d)
 {
     //Now it's a simplified Impedance Controller
-    if (m->nu == m->nv)
+//    cout << "nu:" << m->nu << endl;
+//    cout << "nv:" << m->nv << endl;
+    if (1)
     {
         //set ref_link6_pos
         mjtNum ref_link6_pos[3] = {-0.0, -0.5, 0.5};
@@ -215,10 +319,10 @@ void cartesian_impedance_control(const mjModel *m, mjData *d)
 
         mjtNum inertial_torque[8];
         mjtNum force[6];
-        mjtNum force_torque[8]; //torque transformed from force
-        mjtNum jacp[24];
-        mjtNum jacr[24];
-        mjtNum Full_jacobian[48];
+        mjtNum force_torque[m->nv]; //torque transformed from force
+        mjtNum jacp[3*m->nv];
+        mjtNum jacr[3*m->nv];
+        mjtNum Full_jacobian[6*m->nv];
         mjtNum link6_pos[3];
         mjtNum link6_rot_mat[9];
         mjtNum link6_rot_quat[4];
@@ -241,22 +345,26 @@ void cartesian_impedance_control(const mjModel *m, mjData *d)
         for (int j = 0; j < 3; j++)
             e[j + 3] = (link6_rot_quat[j + 1] - ref_link6_rot[j + 1]);
         //calculate jacobian
-        mj_jacGeom(m, d, jacp, jacr, int(7));
+        /*mj_jacGeom(m, d, jacp, jacr, int(7));
         //mj_jac(m, d, jacp, jacr, link6_pos,int(7));
         for (int j = 0; j < 24; j++)
             Full_jacobian[j] = jacp[j];
         for (int j = 0; j < 24; j++)
-            Full_jacobian[j + 24] = jacr[j];
+            Full_jacobian[j + 24] = jacr[j];*/
+        eef_full_jacobian(Full_jacobian);
+//        eef_full_jacobian(Full_jacobian_global);
+//        cout << "jacBody" << endl;
+//        mju_printMat(Full_jacobian_global, 6, 8);
 
         //cartesian link 6 vel = Full_jacobian * qvel
-        mju_mulMatVec(ref_link6_vel, Full_jacobian, d->qvel, 6, 8);
+        mju_mulMatVec(ref_link6_vel, Full_jacobian, d->qvel, 6, m->nv);
         //naive PD control law
         for (int j = 0; j < 6; j++)
             force[j] = -kp[j] * e[j] - kd[j] * ref_link6_vel[j];
         //transform cartesian force to joint space torque
-        mju_mulMatTVec(force_torque, Full_jacobian, force, 6, 8);
+        mju_mulMatTVec(force_torque, Full_jacobian, force, 6, m->nv);
 
-        if (Verbose)
+        if (true)
         {
             cout << "################ Control variables ###################" << endl;
             cout << "link6_pos:" << endl;
@@ -269,13 +377,21 @@ void cartesian_impedance_control(const mjModel *m, mjData *d)
             mju_printMat(force, 1, 6);
             cout << "force_torque:" << endl;
             mju_printMat(force_torque, 1, 8);
-            //cout << "jacBody" << endl;
-            //mju_printMat(jacp, 3, 8);
-            //mju_printMat(jacr, 3, 8);
-            //mju_printMat(Full_jacobian, 6, 8);
+            cout << "jacBody" << endl;
+            mju_printMat(jacp, 3, 8);
+            mju_printMat(jacr, 3, 8);
+            mju_printMat(Full_jacobian, 6, 8);
         }
 
-        mj_mulM(m, d, inertial_torque, ref_acc);
+//        mj_mulM(m, d, inertial_torque, ref_acc);
+//        mju_add(d->ctrl, inertial_torque, d->qfrc_inverse, 8);
+//        mju_addTo(d->ctrl, force_torque, 8);
+        mjtNum M[m->nv*m->nv];
+	    mjtNum M_robot[m->nu*m->nu];
+	    mj_fullM(m, M, d->qM);
+	    extract_submatrix(M, M_robot, 0, m->nu, 0, m->nu);
+	    mju_mulMatVec(inertial_torque, M_robot, ref_acc, 8, 8);
+
         mju_add(d->ctrl, inertial_torque, d->qfrc_inverse, 8);
         mju_addTo(d->ctrl, force_torque, 8);
 
@@ -332,18 +448,6 @@ void apply_FT_on_eef(const mjModel *m, mjData *d, mjtNum *force)
     }
 }
 
-void eef_full_jacobian(mjtNum *Full_jacobian)
-{
-    //compute the full jacobian of the end effector(link 6)
-    mjtNum jacp[24];
-    mjtNum jacr[24];
-    mj_jacGeom(m, d, jacp, jacr, int(7));
-    for (int j = 0; j < 24; j++)
-        Full_jacobian[j] = jacp[j];
-    for (int j = 0; j < 24; j++)
-        Full_jacobian[j + 24] = jacr[j];
-}
-
 void close(void)
 {
     glfwDestroyWindow(window);
@@ -380,6 +484,16 @@ void update_pd_gain(mjtNum *new_kp, mjtNum *new_kv)
 
 }
 
+void update_pi_gain(mjtNum *new_kp, mjtNum *new_ki)
+{
+    for (int i = 0; i < 6; i++)
+    {
+        kp[i + i * 8] = new_kp[i];
+        ki[i + i * 8] = new_ki[i];
+    }
+
+}
+
 void update_gripper_state(double gripper_p)
 {
     gripper_pose = gripper_p;
@@ -407,6 +521,9 @@ void step(void)
     case 2:
         mjtNum force[6];
         apply_FT_on_eef(m, d, force);
+        break;
+    case 3:
+        joint_vel_control(m, d);
         break;
     }
     mj_step2(m, d);
@@ -462,12 +579,16 @@ void init(void)
 int main(void)
 {
     init();
-    mjtNum np[6] = {17, 17, 17, 17, 17, 17};
+    /*mjtNum np[6] = {17, 17, 17, 17, 17, 17};
     mjtNum nv[6] = {40, 40, 40, 40, 40, 40};
-    update_pd_gain(np, nv);
+    update_pd_gain(np, nv);*/
 
-    mjtNum j[8] = {2, 0, 0, 0, 0, 0, 0, 0};
-    mjtNum v[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+    mjtNum np[6] = {17, 17, 17, 17, 17, 17};
+    mjtNum ni[6] = {1, 1, 1, 1, 1, 1};
+    update_pi_gain(np, ni);
+
+    mjtNum j[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+    mjtNum v[8] = {0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0, 0};
     mjtNum a[8] = {0, 0, 0, 0, 0, 0, 0, 0};
     update_reference_traj(j, v, a);
     
@@ -546,6 +667,13 @@ extern "C"
         mju_copy(joint_acc, d->qacc, 8);
     }
 
+    void wrapper_set_joint_states(mjtNum *joint_pose, mjtNum *joint_vel, mjtNum *joint_acc)
+    {
+        mju_copy(d->qpos, joint_pose, 8);
+        mju_copy(d->qvel, joint_vel,  8);
+        mju_copy(d->qacc, joint_acc,  8);
+    }
+
     void wrapper_get_sensor_reading(mjtNum *Force)
     {
         int sensorId = mj_name2id(m, mjOBJ_SENSOR, "force_ee");
@@ -555,9 +683,21 @@ extern "C"
         mju_copy(Force, &d->sensordata[adr], dim);
     }
 
+    void wrapper_nv(mjtNum *nv)
+    {
+//        mju_copy(nv, mjtNum(m->nv), 1);
+        nv[0] = mjtNum(m->nv);
+    }
+
     void wrapper_eef_full_jacobian(mjtNum *Full_jacobian)
     {
-        eef_full_jacobian(Full_jacobian);
+        mjtNum jacp[3*m->nv];
+        mjtNum jacr[3*m->nv];
+        mj_jacGeom(m, d, jacp, jacr, int(7));
+        for (int j = 0; j < 3*m->nv; j++)
+            Full_jacobian[j] = jacp[j];
+        for (int j = 0; j < 3*m->nv; j++)
+            Full_jacobian[j + 3*m->nv] = jacr[j];
     }
 
     void wrapper_update_controller_type(int controller_idx)
@@ -593,8 +733,8 @@ extern "C"
         for (int j = 0; j < 3; j++)
             pose_vel[j] = link6_pos[j];
         for (int j = 0; j < 3; j++)
-            pose_vel[j + 3] = link6_rot_quat[j + 1];
+            pose_vel[j + 3] = link6_rot_quat[j];
         for (int j = 0; j < 6; j++)
-            pose_vel[j + 6] = link6_vel[j];
+            pose_vel[j + 7] = link6_vel[j];
     }
 }
