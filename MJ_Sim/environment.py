@@ -28,7 +28,7 @@ class mj_sim:
 
         self.time_render = np.zeros(1)
         self.gripper_close = False
-        self.nv = 20
+        self.nv = 8
 
         # build a c type array to hold the return value
         self.joint_pos_holder = (ctypes.c_double * 8)(
@@ -59,14 +59,14 @@ class mj_sim:
         # initialize a PD gain, may need more effort on tunning
         # kp = np.array([17, 17, 17, 17, 17, 17])
         # kv = np.array([40, 40, 40, 40, 40, 40])
-        kp = 40.001*np.array([1, 1, 1, 1, 1, 1])
+        kp = 1*np.array([1, 1, 1, 1, 1, 1])
         kv = 2*np.sqrt(kp)#np.array([40, 40, 40, 40, 40, 40])
         self.set_pd_gain(kp, kv)
 
         # initialize admittance gains
-        self.adm_kp = 5*np.array([1, 1, 1, 1, 1, 1])
+        self.adm_kp = 1*np.array([1, 1, 1, 1, 1, 1])
         self.adm_m = 0.1*np.array([1, 1, 1, 1, 1, 1])
-        self.adm_kd = 2*np.sqrt(np.multiply(self.adm_kp, self.adm_m))
+        self.adm_kd = 0.5*np.sqrt(np.multiply(self.adm_kp, self.adm_m))
         self.adm_pose_ref = np.zeros(7)
         self.adm_vel_ref = np.zeros(6)
 
@@ -80,7 +80,9 @@ class mj_sim:
         self.get_joint_states()
         self.get_pose_vel()
         self.get_sensor_data()
-        print(self.force_sensor_data - self.force_offset)
+        eff_rotm = trans_quat.quat2mat(self.pose_vel[3:7])
+        world_force = eff_rotm@(self.force_sensor_data - self.force_offset)
+        print(world_force)
         self.get_jacobian()
 
     def get_sim_time(self):
@@ -333,14 +335,14 @@ if __name__ == "__main__":
         # Calibrate force
         sim.force_calibration()
         j, v, a = np.zeros((1, 6)), np.zeros((1, 6)), np.zeros((1, 6))
-        sim.adm_pose_ref = sim.pose_vel[:7] + np.array([0.0, 0.0, -0.4, 0.0, 0.0, 0.0, 0.0])
-        for _ in range(3):
+        sim.adm_pose_ref = sim.pose_vel[:7] + np.array([0.0, 0.0, -0.2, 0.0, 0.0, 0.0, 0.0])
+        for _ in range(1):
             st = time.time()
             # target_vel = np.array([np.random.randn() * 0.05, np.random.randn() * 0.05, np.random.randn() * 0.05, 0.0, 0.0, 0.0])
             # target_vel = np.array(
             #     [0.05, 0.0, 0.0, 0.0, 0.0, 0.0])
 
-            while time.time() - st < 1:
+            while time.time() - st < 5:
                 # Full_Jacobian = sim.full_jacobian
                 # Jacobian = Full_Jacobian[:6, :6]
                 # target_joint_vel = np.linalg.pinv(Jacobian)@target_vel
