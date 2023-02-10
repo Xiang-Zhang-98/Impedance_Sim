@@ -41,7 +41,10 @@ class mj_sim:
             0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
         )
         self.time_render_holder = (ctypes.c_double * 1)(0.0)
-        self.verbose_holder = (ctypes.c_bool)(False)
+        self.Verbose = False
+        self.sim.wrapper_set_verbose(self.Verbose)
+        self.Render = True
+        self.sim.wrapper_set_render(self.Render)
         jac = [0.0] * 6 * self.nv
         self.jacobian_holder = (ctypes.c_double * len(jac))(*jac)
         self.force_sensor_data_holder = (ctypes.c_double * 3)(
@@ -66,7 +69,7 @@ class mj_sim:
         # initialize admittance gains
         self.adm_kp = 1*np.array([1, 1, 1, 1, 1, 1])
         self.adm_m = 0.1*np.array([1, 1, 1, 1, 1, 1])
-        self.adm_kd = 0.5*np.sqrt(np.multiply(self.adm_kp, self.adm_m))
+        self.adm_kd = 5*np.sqrt(np.multiply(self.adm_kp, self.adm_m))
         self.adm_pose_ref = np.zeros(7)
         self.adm_vel_ref = np.zeros(6)
 

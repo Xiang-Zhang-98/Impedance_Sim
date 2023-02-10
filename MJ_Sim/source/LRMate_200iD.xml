@@ -14,12 +14,12 @@
     </default>
 
     <actuator>
-        <motor ctrllimited="true" ctrlrange="-10.0 10.0" gear="1.0" joint="joint1" name="act1"/>
-        <motor ctrllimited="true" ctrlrange="-10.0 10.0" gear="1.0" joint="joint2" name="act2"/>
-        <motor ctrllimited="true" ctrlrange="-10.0 10.0" gear="1.0" joint="joint3" name="act3"/>
-        <motor ctrllimited="true" ctrlrange="-10.0 10.0" gear="1.0" joint="joint4" name="act4"/>
-        <motor ctrllimited="true" ctrlrange="-10.0 10.0" gear="1.0" joint="joint5" name="act5"/>
-        <motor ctrllimited="true" ctrlrange="-10.0 10.0" gear="1.0" joint="joint6" name="act6"/>
+        <motor ctrllimited="true" ctrlrange="-5.0 5.0" gear="1.0" joint="joint1" name="act1"/>
+        <motor ctrllimited="true" ctrlrange="-5.0 5.0" gear="1.0" joint="joint2" name="act2"/>
+        <motor ctrllimited="true" ctrlrange="-5.0 5.0" gear="1.0" joint="joint3" name="act3"/>
+        <motor ctrllimited="true" ctrlrange="-5.0 5.0" gear="1.0" joint="joint4" name="act4"/>
+        <motor ctrllimited="true" ctrlrange="-5.0 5.0" gear="1.0" joint="joint5" name="act5"/>
+        <motor ctrllimited="true" ctrlrange="-5.0 5.0" gear="1.0" joint="joint6" name="act6"/>
 
         <position ctrllimited="true" ctrlrange="0 0.0435" joint="jointf1" kp="30" name="actf1"/>
         <position ctrllimited="true" ctrlrange="0 0.0435" joint="jointf2" kp="30" name="actf2"/>
@@ -120,7 +120,7 @@
         </body> -->
 
         <body name="hole" pos="0 0 0.11">
-
+            <geom name='hole_base_geom' type="box" size="0.075 0.075 0.015" pos="0.5 0 -0.025" rgba="1 0 0 1"/>
             <geom name='hole_geom_1' type="mesh" pos="0.5 0 0" mesh="hole" rgba = "0 1 0 1" contype="1" conaffinity="1"/>
             <geom name='hole_geom_2' type="mesh" pos="0.5 0 0" quat = "0 0 1 0" mesh="hole" rgba = "0 1 0 1" contype="1" conaffinity="1"/>
             <geom name='hole_geom_3' type="mesh" pos="0.5 0 0" quat = "0 1 1 0" mesh="hole" rgba = "0 1 0 1" contype="1" conaffinity="1"/>

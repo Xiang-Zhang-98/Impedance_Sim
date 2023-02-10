@@ -36,6 +36,7 @@ mjtNum ki[64];
 
 //print variables in the control loop
 bool Verbose = true;
+bool Render = true;
 
 // gripper status: 0.042 gripper fully close; 0.0 fully open
 double gripper_pose = 0.0;
@@ -505,7 +506,7 @@ void step(void)
     //  Assuming MuJoCo can simulate faster than real-time, which it usually can,
     //  this loop will finish on time for the next frame to be rendered at 60 fps.
     //  Otherwise add a cpu timer and exit this loop when it is time to render.
-    if (d->time - timer_render > 1.0 / 60.0)
+    if (d->time - timer_render > 1.0 / 60.0 && Render)
         update_ui(window);
 
     // step frequency about 125
@@ -527,9 +528,10 @@ void step(void)
         break;
     }
     mj_step2(m, d);
-
-    if (glfwWindowShouldClose(window))
-        close();
+    if (Render){
+        if (glfwWindowShouldClose(window))
+            close();
+    }
 }
 
 
@@ -547,29 +549,30 @@ void init(void)
     m = mj_loadXML("source/LRMate_200iD.xml", 0, error, 1000); // MuJoCo model
     d = mj_makeData(m);                                        // MuJoCo data
 
-    if (!glfwInit())
-        mju_error("Could not initialize GLFW"); // init GLFW
+    if (Render){
+        if (!glfwInit())
+            mju_error("Could not initialize GLFW"); // init GLFW
 
-    // create window, make OpenGL context current, request v-sync
-    window = glfwCreateWindow(1800, 1200, "Fanuc Robot Simulation", NULL, NULL);
-    glfwMakeContextCurrent(window);
-    glfwSwapInterval(1);
-    // initialize visualization data structures
-    mjv_defaultCamera(&cam);
-    mjv_defaultOption(&opt);
-    mjv_defaultScene(&scn);
-    mjr_defaultContext(&con);
+        // create window, make OpenGL context current, request v-sync
+        window = glfwCreateWindow(1800, 1200, "Fanuc Robot Simulation", NULL, NULL);
+        glfwMakeContextCurrent(window);
+        glfwSwapInterval(1);
+        // initialize visualization data structures
+        mjv_defaultCamera(&cam);
+        mjv_defaultOption(&opt);
+        mjv_defaultScene(&scn);
+        mjr_defaultContext(&con);
 
-    // create scene and context
-    mjv_makeScene(m, &scn, 2000);
-    mjr_makeContext(m, &con, mjFONTSCALE_150);
+        // create scene and context
+        mjv_makeScene(m, &scn, 2000);
+        mjr_makeContext(m, &con, mjFONTSCALE_150);
 
-    // install GLFW mouse and keyboard callbacks
-    glfwSetKeyCallback(window, keyboard);
-    glfwSetCursorPosCallback(window, mouse_move);
-    glfwSetMouseButtonCallback(window, mouse_button);
-    glfwSetScrollCallback(window, scroll);
-
+        // install GLFW mouse and keyboard callbacks
+        glfwSetKeyCallback(window, keyboard);
+        glfwSetCursorPosCallback(window, mouse_move);
+        glfwSetMouseButtonCallback(window, mouse_button);
+        glfwSetScrollCallback(window, scroll);
+    }
     timer_render = d->time;
 
     // set up a controller, we'll not use this as we want to have more freedoms of the control loop
@@ -606,12 +609,19 @@ extern "C"
     void wrapper_init(void)
     {
         init();
-        update_ui(window);
+        if(Render){
+            update_ui(window);
+        }
     }
 
     void wrapper_set_verbose(bool v)
     {
         Verbose = v;
+    }
+
+    void wrapper_set_render(bool r)
+    {
+        Render = r;
     }
 
     void wrapper_update_reference_traj(mjtNum *tar_joint, mjtNum *tar_vel, mjtNum *tar_acc)
