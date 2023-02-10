@@ -94,7 +94,7 @@
 				                        </body>
                                         <body name="peg" pos="0.503 -0.00 0.7875" euler="0 0 0">
 <!--                                        <site name="vertex1" pos="-0.0079 -0.0079 -0.005" type="sphere" size="0.0005" rgba="0.6 0.8 0.1 1"/>-->
-                                            <site name="vertex1" pos="0.35 -0.00 -0.0" type="sphere" size="0.01" rgba="0.6 0.8 0.1 1"/>
+                                            <site name="vertex1" pos="0.25 -0.00 -0.0" type="sphere" size="0.01" rgba="0.6 0.8 0.1 1"/>
                                             <geom name="peg_pole" pos="0.25 0.0 0.0" type="cylinder" size="0.015 0.05" contype="1" euler="0 1.5707963 0" conaffinity="1" rgba="1 0 0 1"/>
                                             <geom name="peg_geom" pos="0.3 0.0 0.0" type="mesh" mesh="peg" contype="1" euler="0 1.5707963 0" conaffinity="1" rgba="1 0 0 1"/>
                                         </body>
@@ -120,7 +120,7 @@
         </body> -->
 
         <body name="hole" pos="0 0 0.11">
-            <geom name='hole_base_geom' type="box" size="0.075 0.075 0.015" pos="0.5 0 -0.025" rgba="1 0 0 1"/>
+            <geom name='hole_base_geom' type="box" size="0.575 0.575 0.015" pos="0.5 0 -0.025" rgba="1 0 0 1"/>
             <geom name='hole_geom_1' type="mesh" pos="0.5 0 0" mesh="hole" rgba = "0 1 0 1" contype="1" conaffinity="1"/>
             <geom name='hole_geom_2' type="mesh" pos="0.5 0 0" quat = "0 0 1 0" mesh="hole" rgba = "0 1 0 1" contype="1" conaffinity="1"/>
             <geom name='hole_geom_3' type="mesh" pos="0.5 0 0" quat = "0 1 1 0" mesh="hole" rgba = "0 1 0 1" contype="1" conaffinity="1"/>

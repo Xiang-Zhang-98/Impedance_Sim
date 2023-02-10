@@ -8,6 +8,7 @@ import source.trajectory_cubic as traj
 import matplotlib.pyplot as plt
 import transforms3d.quaternions as trans_quat
 
+
 # To debug in VS Code, add the following line to launch.json under "configurations"
 # "env": {"LD_LIBRARY_PATH": "/home/{USER_NAME}/.mujoco/mujoco200/bin/"}
 
@@ -58,17 +59,16 @@ class mj_sim:
         self.n_step = 0
         self.sim.wrapper_init()
 
-
         # initialize a PD gain, may need more effort on tunning
         # kp = np.array([17, 17, 17, 17, 17, 17])
         # kv = np.array([40, 40, 40, 40, 40, 40])
-        kp = 1*np.array([1, 1, 1, 1, 1, 1])
-        kv = 2*np.sqrt(kp)#np.array([40, 40, 40, 40, 40, 40])
+        kp = 1 * np.array([1, 1, 1, 1, 1, 1])
+        kv = 2 * np.sqrt(kp)  # np.array([40, 40, 40, 40, 40, 40])
         self.set_pd_gain(kp, kv)
 
         # initialize admittance gains
-        self.adm_kp = 10*np.array([1, 1, 1, 1, 1, 1])
-        self.adm_m = 0.1*np.array([1, 1, 1, 1, 1, 1])
+        self.adm_kp = 10 * np.array([1, 1, 1, 1, 1, 1])
+        self.adm_m = 0.1 * np.array([1, 1, 1, 1, 1, 1])
         self.adm_kd = np.sqrt(np.multiply(self.adm_kp, self.adm_m))
         self.adm_pose_ref = np.zeros(7)
         self.adm_vel_ref = np.zeros(6)
@@ -77,16 +77,82 @@ class mj_sim:
         self.HZ = 125  # this is the frequency of c++ simulator, set in the xml file
         self.traj_pose, self.traj_vel, self.traj_acc = None, None, None
 
+        # peg-in-hole task setting
+        self.work_space_xy_limit = 4
+        self.work_space_z_limit = 4
+        self.work_space_rollpitch_limit = np.pi * 5 / 180.0
+        self.work_space_yaw_limit = np.pi * 10 / 180.0
+        self.goal = np.array([0, 0, 1])
+        self.goal_ori = np.array([0, 0, 0])
+        self.noise_level = 0.2
+        self.ori_noise_level = 0.5
+        self.use_noisy_state = True
+        self.force_noise = True
+        self.force_noise_level = 0.2
+        self.force_limit = 2
+        self.evaluation = self.Render
+        self.moving_pos_threshold = 2.5
+        self.moving_ori_threshold = 4
 
-    def step(self):
+    def sim_step(self):
         self.sim.wrapper_step()
         self.get_joint_states()
         self.get_pose_vel()
         self.get_sensor_data()
         eff_rotm = trans_quat.quat2mat(self.pose_vel[3:7])
-        world_force = eff_rotm@(self.force_sensor_data - self.force_offset)
+        world_force = eff_rotm @ (self.force_sensor_data - self.force_offset)
         print(world_force)
         self.get_jacobian()
+
+    def get_RL_obs(self):
+        eef_pos = self.pose_vel[:3]
+        eef_vel = self.pose_vel[7:]
+        eef_eul = trans_quat.quat2axangle(self.pose_vel[3:7])
+        eff_rotm = trans_quat.quat2mat(self.pose_vel[3:7])
+        world_force = np.zeros(6)
+        eef_force = self.force_sensor_data - self.force_offset
+        world_force[:3] = eff_rotm @ eef_force
+        world_force = np.clip(world_force, -10, 10)
+        state = np.concatenate([eef_pos, eef_eul, eef_vel, world_force])
+        return state
+
+
+    def step(self, action):
+        # step function for RL
+        desired_vel = action[:6]
+        desired_kp = action[6:12]
+        init_ob = self.get_RL_obs()
+        for i in range(100):
+            ob = self.get_RL_obs()
+            curr_force = ob[12:]
+            if np.abs(np.dot(curr_force, desired_vel) / np.linalg.norm(desired_vel + 1e-6, ord=2)) > self.force_limit:
+                break
+            delta_ob = ob - init_ob
+            if np.linalg.norm(delta_ob[0:3], ord=2) > self.moving_pos_threshold or np.linalg.norm(delta_ob[3:6], ord=2)\
+                    > self.moving_ori_threshold / 180 * np.pi:
+                break
+            if np.abs(ob[0]) > self.work_space_xy_limit:
+                desired_vel[0] = -5 * np.sign(ob[0])
+            if np.abs(ob[1]) > self.work_space_xy_limit:
+                desired_vel[1] = -5 * np.sign(ob[1])
+            if np.abs(ob[3]) > self.work_space_rollpitch_limit:
+                desired_vel[3] = -1 * np.sign(ob[3])
+            if np.abs(ob[4]) > self.work_space_rollpitch_limit:
+                desired_vel[4] = -1 * np.sign(ob[4])
+            if np.abs(ob[5]) > self.work_space_yaw_limit:
+                desired_vel[5] = -1 * np.sign(ob[5])
+            if ob[2] > self.work_space_z_limit:
+                desired_vel[2] = -5
+            # check done
+            if np.linalg.norm(ob[0:3] - self.goal) < 0.3:
+                done = False
+                desired_vel = np.zeros(6)  # if reach to goal, then stay
+            else:
+                done = False
+            self.adm_pose_ref = self.pose_vel[:7]
+            self.adm_vel_ref = desired_vel
+            target_joint_vel = self.admittance_control()
+            self.set_joint_velocity(target_joint_vel)
 
     def get_sim_time(self):
         self.sim.wrapper_get_sim_time(self.time_render_holder)
@@ -119,7 +185,7 @@ class mj_sim:
 
     def set_reference_traj(self, ref_joint, ref_vel, ref_acc):
         assert (
-            ref_joint.shape == (6,) and ref_vel.shape == (6,) and ref_acc.shape == (6,)
+                ref_joint.shape == (6,) and ref_vel.shape == (6,) and ref_acc.shape == (6,)
         )
         ref_joint_mj = (ctypes.c_double * 8)(
             ref_joint[0],
@@ -170,16 +236,14 @@ class mj_sim:
 
     def force_calibration(self, H=100):
         force_history = np.zeros([H, 3])
-        self.step()
+        self.sim_step()
         self.set_reference_traj(
-            self.joint_pos, 0*self.joint_vel, 0*self.joint_acc
+            self.joint_pos, 0 * self.joint_vel, 0 * self.joint_acc
         )
         for _ in range(H):
-            self.step()
+            self.sim_step()
             force_history[_, :] = self.force_sensor_data
-        self.force_offset = np.mean(force_history[int(H/2):], axis=0)
-
-
+        self.force_offset = np.mean(force_history[int(H / 2):], axis=0)
 
     def ik(self, pose):
         """
@@ -228,19 +292,8 @@ class mj_sim:
                 self.traj_pose[i], self.traj_vel[i], self.traj_acc[i]
             )
             i += 1
-            self.step()
-            # j = np.vstack((j, self.joint_pos))  # for jva plot
-            # v = np.vstack((v, self.joint_vel))  # for jva plot
-            # a = np.vstack((a, self.joint_acc))  # for jva plot
+            self.sim_step()
         self.set_reference_traj(target, np.zeros(6), np.zeros(6))
-
-        # # for jva plot
-        # for _ in range(400):
-        #     self.step()
-        #     j = np.vstack((j, self.joint_pos))
-        #     v = np.vstack((v, self.joint_vel))
-        #     a = np.vstack((a, self.joint_acc))
-        # self.plot_jva(j, v, a, 0)
 
     def go2cpose(self, target):
         """
@@ -248,7 +301,6 @@ class mj_sim:
         """
         jtarget = self.ik(target)
         self.go2jpose(jtarget)
-    
 
     def set_joint_velocity(self, target_vel):
         T = 1 / self.HZ
@@ -265,7 +317,7 @@ class mj_sim:
         eff_pos = self.pose_vel[:3]
         eff_rotm = trans_quat.quat2mat(self.pose_vel[3:7])
         eff_vel = self.pose_vel[7:]
-        world_force[:3] = eff_rotm@eef_force
+        world_force[:3] = eff_rotm @ eef_force
         world_force = np.clip(world_force, -10, 10)
 
         # dynamics
@@ -286,7 +338,7 @@ class mj_sim:
 
         Full_Jacobian = sim.full_jacobian
         Jacobian = Full_Jacobian[:6, :6]
-        target_joint_vel = np.linalg.pinv(Jacobian)@adm_vel
+        target_joint_vel = np.linalg.pinv(Jacobian) @ adm_vel
         return target_joint_vel
 
     def plot_jva(self, j, v, a, axis=None):
@@ -334,7 +386,7 @@ if __name__ == "__main__":
         # set init robot pose
         init_c_pose = np.array([0.5, 0.0, 0.5, 0.0, np.pi, np.pi])
         init_j_pose = IK(init_c_pose)
-        sim.set_joint_states(init_j_pose, 0*init_j_pose, 0*init_j_pose)
+        sim.set_joint_states(init_j_pose, 0 * init_j_pose, 0 * init_j_pose)
         # Calibrate force
         sim.force_calibration()
         j, v, a = np.zeros((1, 6)), np.zeros((1, 6)), np.zeros((1, 6))
@@ -351,7 +403,7 @@ if __name__ == "__main__":
                 # target_joint_vel = np.linalg.pinv(Jacobian)@target_vel
                 target_joint_vel = sim.admittance_control()
                 sim.set_joint_velocity(target_joint_vel)
-                sim.step()
+                sim.sim_step()
                 j = np.vstack((j, sim.joint_pos))
                 v = np.vstack((v, sim.joint_vel))
                 a = np.vstack((a, sim.joint_acc))
@@ -367,65 +419,3 @@ if __name__ == "__main__":
         cx.plot(a[1:, axis])
         cx.legend(["real acc"])
         plt.show()
-
-    ################################################ randomly move to a joint ################################################
-    if random_move:
-        # randomly move in the workspace
-        for i in range(5):
-            target = np.hstack(
-                (
-                    np.random.uniform(-2, 2, 1),
-                    np.random.uniform(-0.7, 0.7, 2),
-                    np.random.uniform(-1, 1, 1),
-                    np.random.uniform(-np.pi / 1.5, 0.1, 1),
-                    np.random.uniform(-3, 3, 1),
-                )
-            )
-            sim.go2jpose(target)
-            for _ in range(100):
-                sim.step()
-
-    ################################################ grasp demo ################################################
-
-    if grasp_demo:
-        # pick and place a box
-        for _ in range(5):
-            close, fully_open = 0.0175, 0.0
-            sim.go2jpose(np.array([0.0, 0.0, 0.0, 0.0, -np.pi / 2, 0.0]))
-            sim.go2cpose(np.array([0.5, -0.3, 0.4, 0.0, np.pi, np.pi]))
-            sim.go2cpose(np.array([0.5, -0.3, 0.25, 0.0, np.pi, np.pi]))
-            sim.set_gripper(close)
-            for _ in range(50):
-                sim.step()
-            sim.go2cpose(np.array([0.5, -0.3, 0.4, 0.0, np.pi, np.pi]))
-            for _ in range(50):
-                sim.step()
-            sim.go2cpose(np.array([0.5, 0.3, 0.4, 0.0, np.pi, np.pi]))
-            sim.go2cpose(np.array([0.5, 0.3, 0.25, 0.0, np.pi, np.pi]))
-            sim.set_gripper(fully_open)
-            for _ in range(50):
-                sim.step()
-            sim.go2cpose(np.array([0.5, 0.3, 0.4, 0.0, np.pi, np.pi]))
-            sim.go2jpose(np.array([0.0, 0.0, 0.0, 0.0, -np.pi / 2, 0.0]))
-            for _ in range(50):
-                sim.step()
-            
-            sim.go2jpose(np.array([0.0, 0.0, 0.0, 0.0, -np.pi / 2, 0.0]))
-            sim.go2cpose(np.array([0.5, 0.3, 0.4, 0.0, np.pi, np.pi]))
-            sim.go2cpose(np.array([0.5, 0.3, 0.25, 0.0, np.pi, np.pi]))
-            sim.set_gripper(close)
-            for _ in range(50):
-                sim.step()
-            sim.go2cpose(np.array([0.5, 0.3, 0.4, 0.0, np.pi, np.pi]))
-            for _ in range(50):
-                sim.step()
-            sim.go2cpose(np.array([0.5, -0.3, 0.4, 0.0, np.pi, np.pi]))
-            sim.go2cpose(np.array([0.5, -0.3, 0.25, 0.0, np.pi, np.pi]))
-            sim.set_gripper(fully_open)
-            for _ in range(50):
-                sim.step()
-            sim.go2cpose(np.array([0.5, -0.3, 0.4, 0.0, np.pi, np.pi]))
-            sim.go2jpose(np.array([0.0, 0.0, 0.0, 0.0, -np.pi / 2, 0.0]))
-            for _ in range(50):
-                sim.step()
-                
