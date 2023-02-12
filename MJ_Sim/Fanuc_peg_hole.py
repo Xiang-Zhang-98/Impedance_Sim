@@ -7,14 +7,18 @@ from source.lrmate_kine_base import FK, IK
 import source.trajectory_cubic as traj
 import matplotlib.pyplot as plt
 import transforms3d.quaternions as trans_quat
-
+import transforms3d.euler as trans_eul
+import gym
+from gym import spaces
 
 # To debug in VS Code, add the following line to launch.json under "configurations"
 # "env": {"LD_LIBRARY_PATH": "/home/{USER_NAME}/.mujoco/mujoco200/bin/"}
 
 
-class mj_sim:
+class Fanuc_peg_in_hole(gym.Env):
     def __init__(self):
+        super(Fanuc_peg_in_hole, self).__init__()
+
         cwd = os.getcwd()
         self.sim = ctypes.cdll.LoadLibrary(cwd + "/bin/mujocosim.so")
 
@@ -58,6 +62,11 @@ class mj_sim:
         # initialize the simulation
         self.n_step = 0
         self.sim.wrapper_init()
+        init_c_pose = np.array([0.5, 0.0, 0.5, 0.0, np.pi, np.pi])
+        init_j_pose = IK(init_c_pose)
+        self.set_joint_states(init_j_pose, 0*init_j_pose, 0*init_j_pose)
+        self.force_calibration()
+        # self.sim_step()
 
         # initialize a PD gain, may need more effort on tunning
         # kp = np.array([17, 17, 17, 17, 17, 17])
@@ -82,6 +91,7 @@ class mj_sim:
         self.work_space_z_limit = 4
         self.work_space_rollpitch_limit = np.pi * 5 / 180.0
         self.work_space_yaw_limit = np.pi * 10 / 180.0
+        self.work_space_origin = np.array([0.5, 0, 0.1])
         self.goal = np.array([0, 0, 1])
         self.goal_ori = np.array([0, 0, 0])
         self.noise_level = 0.2
@@ -94,6 +104,12 @@ class mj_sim:
         self.moving_pos_threshold = 2.5
         self.moving_ori_threshold = 4
 
+        # RL setting
+        self.observation_space = spaces.Box(low=-1., high=1., shape=self.get_RL_obs().shape, dtype=np.float32)
+        self.action_space = spaces.Box(low=-np.ones(12), high=np.ones(12), dtype=np.float32)
+
+
+
     def sim_step(self):
         self.sim.wrapper_step()
         self.get_joint_states()
@@ -105,15 +121,15 @@ class mj_sim:
         self.get_jacobian()
 
     def get_RL_obs(self):
-        eef_pos = self.pose_vel[:3]
+        eef_pos = self.pose_vel[:3] - self.work_space_origin
         eef_vel = self.pose_vel[7:]
-        eef_eul = trans_quat.quat2axangle(self.pose_vel[3:7])
+        eef_eul = trans_eul.quat2euler(self.pose_vel[3:7])
         eff_rotm = trans_quat.quat2mat(self.pose_vel[3:7])
         world_force = np.zeros(6)
         eef_force = self.force_sensor_data - self.force_offset
         world_force[:3] = eff_rotm @ eef_force
         world_force = np.clip(world_force, -10, 10)
-        state = np.concatenate([eef_pos, eef_eul, eef_vel, world_force])
+        state = np.concatenate([10*eef_pos, eef_eul, 10*eef_vel, world_force])
         return state
 
 
@@ -122,7 +138,7 @@ class mj_sim:
         desired_vel = action[:6]
         desired_kp = action[6:12]
         init_ob = self.get_RL_obs()
-        for i in range(100):
+        for i in range(20):
             ob = self.get_RL_obs()
             curr_force = ob[12:]
             if np.abs(np.dot(curr_force, desired_vel) / np.linalg.norm(desired_vel + 1e-6, ord=2)) > self.force_limit:
@@ -132,9 +148,9 @@ class mj_sim:
                     > self.moving_ori_threshold / 180 * np.pi:
                 break
             if np.abs(ob[0]) > self.work_space_xy_limit:
-                desired_vel[0] = -5 * np.sign(ob[0])
+                desired_vel[0] = -1 * np.sign(ob[0])
             if np.abs(ob[1]) > self.work_space_xy_limit:
-                desired_vel[1] = -5 * np.sign(ob[1])
+                desired_vel[1] = -1 * np.sign(ob[1])
             if np.abs(ob[3]) > self.work_space_rollpitch_limit:
                 desired_vel[3] = -1 * np.sign(ob[3])
             if np.abs(ob[4]) > self.work_space_rollpitch_limit:
@@ -142,17 +158,38 @@ class mj_sim:
             if np.abs(ob[5]) > self.work_space_yaw_limit:
                 desired_vel[5] = -1 * np.sign(ob[5])
             if ob[2] > self.work_space_z_limit:
-                desired_vel[2] = -5
+                desired_vel[2] = -1
             # check done
             if np.linalg.norm(ob[0:3] - self.goal) < 0.3:
                 done = False
                 desired_vel = np.zeros(6)  # if reach to goal, then stay
             else:
                 done = False
+
+            # self.adm_kp = desired_kp
+            # self.adm_kd = np.sqrt(np.multiply(self.adm_kp, self.adm_m))
             self.adm_pose_ref = self.pose_vel[:7]
+            # self.adm_pose_ref[:3] = self.adm_pose_ref[:3] + 0.02*self.moving_pos_threshold*desired_vel[:3]/np.linalg.norm(desired_vel[:3], ord=2)
+            # adm_eul = trans_eul.quat2euler(self.pose_vel[3:7]) + 2/ 180 * np.pi * self.moving_ori_threshold * desired_vel[3:6]/np.linalg.norm(desired_vel[3:6], ord=2)
+            # self.adm_pose_ref[3:7] = trans_eul.euler2quat(adm_eul[0], adm_eul[1], adm_eul[2], axes='sxyz')
             self.adm_vel_ref = desired_vel
             target_joint_vel = self.admittance_control()
             self.set_joint_velocity(target_joint_vel)
+            self.sim_step()
+
+        ob = self.get_RL_obs()
+        # evalute reward
+        dist = np.linalg.norm(ob[0:3] - self.goal)
+        if dist < 0.3:
+            done = False
+            reward = 1000
+        else:
+            done = False
+            reward = np.power(10, 3 - dist)
+        reward = reward
+        if self.evaluation and dist < 0.5:
+            done = True
+        return ob, reward, done, dict(reward_dist=reward)
 
     def get_sim_time(self):
         self.sim.wrapper_get_sim_time(self.time_render_holder)
@@ -308,7 +345,7 @@ class mj_sim:
         target_acc = (target_vel - self.joint_vel) / T
         self.set_reference_traj(target_pos, target_vel, target_acc)
 
-    def admittance_control(self):
+    def admittance_control(self, ctl_ori=False):
         ## Get robot motion from desired dynamics
 
         # process force
@@ -323,11 +360,12 @@ class mj_sim:
         # dynamics
         e = np.zeros(6)
         e[:3] = self.adm_pose_ref[:3] - eff_pos
-        eff_rotm_d = trans_quat.quat2mat(self.adm_pose_ref[3:7])
-        eRd = eff_rotm.T @ eff_rotm_d
-        dorn = trans_quat.mat2quat(eRd)
-        do = dorn[1:]
-        e[3:] = do
+        if ctl_ori:
+            eff_rotm_d = trans_quat.quat2mat(self.adm_pose_ref[3:7])
+            eRd = eff_rotm.T @ eff_rotm_d
+            dorn = trans_quat.mat2quat(eRd)
+            do = dorn[1:]
+            e[3:] = do
 
         e_dot = self.adm_vel_ref - eff_vel
         MA = world_force + np.multiply(self.adm_kp, e) + np.multiply(self.adm_kd, e_dot)
@@ -375,47 +413,8 @@ class mj_sim:
 
 
 if __name__ == "__main__":
-    sim = mj_sim()
-    track_vel = 1
-    random_move = 0
-    grasp_demo = 0
-
-    ################################################ set velocity of the robot ################################################
-    ################################################ May NEED MORE EFFORTS ################################################
-    if track_vel:
-        # set init robot pose
-        init_c_pose = np.array([0.5, 0.0, 0.5, 0.0, np.pi, np.pi])
-        init_j_pose = IK(init_c_pose)
-        sim.set_joint_states(init_j_pose, 0 * init_j_pose, 0 * init_j_pose)
-        # Calibrate force
-        sim.force_calibration()
-        j, v, a = np.zeros((1, 6)), np.zeros((1, 6)), np.zeros((1, 6))
-        sim.adm_pose_ref = sim.pose_vel[:7] + np.array([0.0, 0.0, -0.2, 0.0, 0.0, 0.0, 0.0])
-        for _ in range(1):
-            st = time.time()
-            # target_vel = np.array([np.random.randn() * 0.05, np.random.randn() * 0.05, np.random.randn() * 0.05, 0.0, 0.0, 0.0])
-            # target_vel = np.array(
-            #     [0.05, 0.0, 0.0, 0.0, 0.0, 0.0])
-
-            while time.time() - st < 5:
-                # Full_Jacobian = sim.full_jacobian
-                # Jacobian = Full_Jacobian[:6, :6]
-                # target_joint_vel = np.linalg.pinv(Jacobian)@target_vel
-                target_joint_vel = sim.admittance_control()
-                sim.set_joint_velocity(target_joint_vel)
-                sim.sim_step()
-                j = np.vstack((j, sim.joint_pos))
-                v = np.vstack((v, sim.joint_vel))
-                a = np.vstack((a, sim.joint_acc))
-        axis = 0
-        fig = plt.figure()
-        ax = plt.subplot(1, 3, 1)
-        ax.plot(j[1:, axis])
-        ax.legend(["real pos"])
-        bx = plt.subplot(1, 3, 2)
-        bx.plot(v[1:, axis])
-        bx.legend(["real vel"])
-        cx = plt.subplot(1, 3, 3)
-        cx.plot(a[1:, axis])
-        cx.legend(["real acc"])
-        plt.show()
+    sim = Fanuc_peg_in_hole()
+    for i in range(100):
+        action = np.random.uniform(low=-1, high=1, size=12)
+        sim.step(action)
+    
