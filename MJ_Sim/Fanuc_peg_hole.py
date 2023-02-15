@@ -158,8 +158,6 @@ class Fanuc_peg_in_hole(gym.Env):
 
     def step(self, action):
         # step function for RL
-        # desired_vel = action[:6]
-        # desired_kp = action[6:12]
         desired_vel, desired_kp = self.process_action(action)
         self.adm_kp = desired_kp
         self.adm_kd = 2 * np.sqrt(np.multiply(self.adm_kp, self.adm_m))
