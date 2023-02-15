@@ -327,17 +327,6 @@ if __name__ == "__main__":
     track_vel = 1
     random_move = 0
     grasp_demo = 0
-eef_pos = self.pose_vel[:3] - self.work_space_origin
-        eef_vel = self.pose_vel[7:]
-        eef_eul = trans_eul.quat2euler(self.pose_vel[3:7])
-        eef_world_rotm = trans_quat.quat2mat(self.pose_vel[3:7])
-        eef_rotm = np.linalg.inv(self.work_space_origin_rotm)@eef_world_rotm
-        eef_eul = trans_eul.mat2euler(eef_rotm)
-        world_force = np.zeros(6)
-        eef_force = self.force_sensor_data - self.force_offset
-        world_force[:3] = eef_world_rotm @ eef_force
-        world_force = np.clip(world_force, -10, 10)
-        state = np.concatenate([100*eef_pos, eef_eul, 100*eef_vel, world_force])
     ################################################ set velocity of the robot ################################################
     ################################################ May NEED MORE EFFORTS ################################################
     if track_vel:
