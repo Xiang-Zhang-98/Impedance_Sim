@@ -1,3 +1,4 @@
+import copy
 import ctypes
 import os
 import sys
@@ -85,12 +86,16 @@ class Fanuc_peg_in_hole(gym.Env):
         self.traj_pose, self.traj_vel, self.traj_acc = None, None, None
 
         # peg-in-hole task setting
+        self.eef_offset = np.array([0.3, 0.075, 0.0])
         self.work_space_xy_limit = 4
         self.work_space_z_limit = 4
         self.work_space_rollpitch_limit = np.pi * 5 / 180.0
         self.work_space_yaw_limit = np.pi * 10 / 180.0
-        self.work_space_origin = np.array([0.5, 0, 0.1])
-        self.work_space_origin_rotm = np.array([[0,0,1], [0,1,0], [-1,0,0]])
+        self.work_space_origin = np.array([0.49, -0.0169, 0.1-0.054])
+        self.work_space_origin_rotm = np.array([[0.0423, -0.2853, 0.9575],
+                                                [-0.2853, 0.9150, 0.2853],
+                                                [-0.9575, -0.2853, -0.0427]])
+            # np.array([[0,0,1], [0,1,0], [-1,0,0]])
         self.goal = np.array([0, 0, 1])
         self.goal_ori = np.array([0, 0, 0])
         self.noise_level = 0.2
@@ -113,7 +118,7 @@ class Fanuc_peg_in_hole(gym.Env):
 
 
     def reset(self):
-        init_c_pose = np.array([0.5, 0.0, 0.5, 0.0, np.pi, np.pi])
+        init_c_pose = np.array([0.5, 0.0, 0.40, 0.0, np.pi, np.pi])
         init_j_pose = IK(init_c_pose)
         self.set_joint_states(init_j_pose, 0*init_j_pose, 0*init_j_pose)
         self.force_calibration()
@@ -130,16 +135,17 @@ class Fanuc_peg_in_hole(gym.Env):
         self.get_joint_states()
         self.get_pose_vel()
         self.get_sensor_data()
-        eff_rotm = trans_quat.quat2mat(self.pose_vel[3:7])
-        world_force = eff_rotm @ (self.force_sensor_data - self.force_offset)
-        print(world_force)
+        # eff_rotm = trans_quat.quat2mat(self.pose_vel[3:7])
+        # world_force = eff_rotm @ (self.force_sensor_data - self.force_offset)
+        # print(world_force)
         self.get_jacobian()
 
     def get_RL_obs(self):
-        eef_pos = self.pose_vel[:3] - self.work_space_origin
-        eef_vel = self.pose_vel[7:]
-        eef_eul = trans_eul.quat2euler(self.pose_vel[3:7])
-        eef_world_rotm = trans_quat.quat2mat(self.pose_vel[3:7])
+        # eef_pos = self.pose_vel[:3] - self.work_space_origin
+        # eef_vel = self.pose_vel[7:]
+        # eef_world_rotm = trans_quat.quat2mat(self.pose_vel[3:7])
+        eef_pos, eef_world_rotm, eef_vel = self.get_eef_pose_vel(self.pose_vel)
+        eef_pos = eef_pos - self.work_space_origin
         eef_rotm = np.linalg.inv(self.work_space_origin_rotm)@eef_world_rotm
         eef_eul = trans_eul.mat2euler(eef_rotm)
         world_force = np.zeros(6)
@@ -162,7 +168,7 @@ class Fanuc_peg_in_hole(gym.Env):
         self.adm_kp = desired_kp
         self.adm_kd = 2 * np.sqrt(np.multiply(self.adm_kp, self.adm_m))
         init_ob = self.get_RL_obs()
-        for i in range(20):
+        for i in range(10):
             ob = self.get_RL_obs()
             curr_force = ob[12:]
             if np.abs(np.dot(curr_force, desired_vel) / np.linalg.norm(desired_vel + 1e-6, ord=2)) > self.force_limit:
@@ -171,18 +177,18 @@ class Fanuc_peg_in_hole(gym.Env):
             if np.linalg.norm(delta_ob[0:3], ord=2) > self.moving_pos_threshold or np.linalg.norm(delta_ob[3:6], ord=2)\
                     > self.moving_ori_threshold / 180 * np.pi:
                 break
-            # if np.abs(ob[0]) > self.work_space_xy_limit:
-            #     desired_vel[0] = -1 * np.sign(ob[0])
-            # if np.abs(ob[1]) > self.work_space_xy_limit:
-            #     desired_vel[1] = -1 * np.sign(ob[1])
-            # if np.abs(ob[3]) > self.work_space_rollpitch_limit:
-            #     desired_vel[3] = -1 * np.sign(ob[3])
-            # if np.abs(ob[4]) > self.work_space_rollpitch_limit:
-            #     desired_vel[4] = -1 * np.sign(ob[4])
-            # if np.abs(ob[5]) > self.work_space_yaw_limit:
-            #     desired_vel[5] = -1 * np.sign(ob[5])
-            # if ob[2] > self.work_space_z_limit:
-            #     desired_vel[2] = -1
+            if np.abs(ob[0]) > self.work_space_xy_limit:
+                desired_vel[0] = -self.action_vel_high[0] * np.sign(ob[0])
+            if np.abs(ob[1]) > self.work_space_xy_limit:
+                desired_vel[1] = -self.action_vel_high[1] * np.sign(ob[1])
+            if np.abs(ob[3]) > self.work_space_rollpitch_limit:
+                desired_vel[3] = -self.action_vel_high[3] * np.sign(ob[3])
+            if np.abs(ob[4]) > self.work_space_rollpitch_limit:
+                desired_vel[4] = -self.action_vel_high[4] * np.sign(ob[4])
+            if np.abs(ob[5]) > self.work_space_yaw_limit:
+                desired_vel[5] = -self.action_vel_high[5] * np.sign(ob[5])
+            if ob[2] > self.work_space_z_limit:
+                desired_vel[2] = -self.action_vel_high[2]
             # check done
             if np.linalg.norm(ob[0:3] - self.goal) < 0.3:
                 done = False
@@ -198,7 +204,6 @@ class Fanuc_peg_in_hole(gym.Env):
             # self.adm_pose_ref[3:7] = trans_eul.euler2quat(adm_eul[0], adm_eul[1], adm_eul[2], axes='sxyz')
             self.adm_vel_ref = desired_vel
             target_joint_vel = self.admittance_control()
-            # target_joint_vel = self.Cartersian_vel_control(desired_vel)
             self.set_joint_velocity(target_joint_vel)
             self.sim_step()
 
@@ -214,6 +219,7 @@ class Fanuc_peg_in_hole(gym.Env):
         reward = reward
         if self.evaluation and dist < 0.5:
             done = True
+        print(reward)
         return ob, reward, done, dict(reward_dist=reward)
 
     def get_sim_time(self):
@@ -326,44 +332,6 @@ class Fanuc_peg_in_hole(gym.Env):
         joints = np.rad2deg(joints)
         return FK(joints)
 
-    def plan_traj(self, target, via=None):
-        dist = abs(target - self.joint_pos / 0.7)
-        T = int(np.max(dist) + 1)
-        start = np.hstack((self.joint_pos, 0.0))
-        target = np.hstack((target, T))
-        if via is not None:
-            via.reshape(-1, 6)
-            n_via = via.shape[0]
-            via = np.hstack((via, np.zeros((n_via, 1))))
-        else:
-            step_size = (target - start) / 3
-            via = np.vstack((start + step_size, start + 2 * step_size))
-        self.traj_pose, self.traj_vel, self.traj_acc = traj.trajectory_xyz(
-            start.reshape(1, -1), target.reshape(1, -1), via, self.HZ
-        )
-        self.traj_pose = np.vstack((self.traj_pose, target[:6]))
-        self.traj_vel = np.vstack((self.traj_vel, np.zeros(6)))
-        self.traj_acc = np.vstack((self.traj_acc, np.zeros(6)))
-
-    def go2jpose(self, target):
-        self.plan_traj(target)
-        # j, v, a = np.zeros(6), np.zeros(6), np.zeros(6)  # for jva plot
-        i = 0
-        while i < self.traj_pose.shape[0]:
-            self.set_reference_traj(
-                self.traj_pose[i], self.traj_vel[i], self.traj_acc[i]
-            )
-            i += 1
-            self.sim_step()
-        self.set_reference_traj(target, np.zeros(6), np.zeros(6))
-
-    def go2cpose(self, target):
-        """
-        target: in m, in the world base (bottom of the robot) and in rad
-        """
-        jtarget = self.ik(target)
-        self.go2jpose(jtarget)
-
     def set_joint_velocity(self, target_vel):
         T = 1 / self.HZ
         target_pos = self.joint_pos + T * (self.joint_vel + target_vel) / 2
@@ -376,74 +344,73 @@ class Fanuc_peg_in_hole(gym.Env):
         target_joint_vel = np.linalg.pinv(Jacobian) @ vel
         return target_joint_vel
 
+    def skew_symmetric(self,vec):
+        return np.array([[0, -vec[2], vec[1]],
+                         [vec[2], 0, -vec[0]],
+                         [-vec[1], vec[0], 0]])
+
+    def get_eef_pose_vel(self, link6_pose_vel):
+        link6_pos = link6_pose_vel[:3]
+        link6_rotm = trans_quat.quat2mat(link6_pose_vel[3:7])
+        link6_vel = link6_pose_vel[7:]
+
+        eef_pos = link6_pos + link6_rotm @ self.eef_offset
+        eef_rotm = copy.copy(link6_rotm)
+
+        # Let's forget kinematics and assume eef and link 6 have the same vel
+        # OH we cannot do that
+        eef_vel = copy.copy(link6_vel)
+        eef_vel[:3] = link6_vel[:3] + self.skew_symmetric(link6_vel[3:6]) @ link6_rotm @ self.eef_offset
+        return eef_pos, eef_rotm, eef_vel
+
+    def get_link6_pose_vel_from_eef(self, eef_pos, eef_rotm, eef_vel):
+        link6_rotm = copy.copy(eef_rotm)
+        link6_pos = eef_pos - link6_rotm @ self.eef_offset
+        link6_vel = copy.copy(eef_vel)
+        link6_vel[:3] = eef_vel[:3] - self.skew_symmetric(eef_vel[3:6]) @ link6_rotm @ self.eef_offset
+
+        return link6_pos, link6_rotm, link6_vel
+
+
     def admittance_control(self, ctl_ori=True):
         ## Get robot motion from desired dynamics
+        eef_pos, eef_rotm, eef_vel = self.get_eef_pose_vel(self.pose_vel)
+        eef_pos_d, eef_rotm_d, eef_vel_d = self.get_eef_pose_vel(np.concatenate([self.adm_pose_ref, self.adm_vel_ref]))
+        eef_vel_d = self.adm_vel_ref
 
         # process force
         world_force = np.zeros(6)
         eef_force = self.force_sensor_data - self.force_offset
-        eff_pos = self.pose_vel[:3]
-        eff_rotm = trans_quat.quat2mat(self.pose_vel[3:7])
-        eff_vel = self.pose_vel[7:]
-        world_force[:3] = eff_rotm @ eef_force
+        world_force[:3] = eef_rotm @ eef_force
         world_force = np.clip(world_force, -10, 10)
 
         # dynamics
         e = np.zeros(6)
-        e[:3] = self.adm_pose_ref[:3] - eff_pos
+        e[:3] = eef_pos_d - eef_pos
         if ctl_ori:
-            eff_rotm_d = trans_quat.quat2mat(self.adm_pose_ref[3:7])
-            eRd = eff_rotm.T @ eff_rotm_d
+            # eff_rotm_d = trans_quat.quat2mat(self.adm_pose_ref[3:7])
+            eRd = eef_rotm.T @ eef_rotm_d
             dorn = trans_quat.mat2quat(eRd)
             do = dorn[1:]
             e[3:] = do
 
-        e_dot = self.adm_vel_ref - eff_vel
+        e_dot = eef_vel_d - eef_vel
         MA = world_force + np.multiply(self.adm_kp, e) + np.multiply(self.adm_kd, e_dot)
         adm_acc = np.divide(MA, self.adm_m)
         T = 1 / self.HZ
-        adm_vel = self.pose_vel[7:] + adm_acc * T
-
+        adm_vel = eef_vel + adm_acc * T # This vel is for eef not link6, which we can control
         if not ctl_ori:
             adm_vel[3:] = 0 * adm_vel[3:]
+        link6_pos, link6_rotm, link6_vel = self.get_link6_pose_vel_from_eef(eef_pos, eef_rotm, adm_vel)
+        # link6_vel = adm_vel
         # adm_vel = self.pose_vel[7:] + np.array([0.2,0,0,0,0,0])#adm_acc * T
 
         Full_Jacobian = sim.full_jacobian
         Jacobian = Full_Jacobian[:6, :6]
-        target_joint_vel = np.linalg.pinv(Jacobian) @ adm_vel
+        target_joint_vel = np.linalg.pinv(Jacobian) @ link6_vel
+
         return target_joint_vel
 
-    def plot_jva(self, j, v, a, axis=None):
-        fig = plt.figure()
-        if axis is None:
-            all_axis = [0, 1, 2, 3, 4, 5]
-            for axis in all_axis:
-                ax = plt.subplot(6, 3, 3 * axis + 1)
-                ax.plot(sim.traj_pose[:, axis])
-                ax.plot(j[1:, axis])
-                ax.legend(["ref", "acc"])
-                bx = plt.subplot(6, 3, 3 * axis + 2)
-                bx.plot(sim.traj_vel[:, axis])
-                bx.plot(v[1:, axis])
-                bx.legend(["ref", "acc"])
-                cx = plt.subplot(6, 3, 3 * axis + 3)
-                cx.plot(sim.traj_acc[:, axis])
-                cx.plot(a[1:, axis])
-                cx.legend(["ref", "acc"])
-        else:
-            ax = plt.subplot(1, 3, 1)
-            ax.plot(sim.traj_pose[:, axis])
-            ax.plot(j[1:, axis])
-            ax.legend(["ref", "acc"])
-            bx = plt.subplot(1, 3, 2)
-            bx.plot(sim.traj_vel[:, axis])
-            bx.plot(v[1:, axis])
-            bx.legend(["ref", "acc"])
-            cx = plt.subplot(1, 3, 3)
-            cx.plot(sim.traj_acc[:, axis])
-            cx.plot(a[1:, axis])
-            cx.legend(["ref", "acc"])
-        plt.show()
 
 
 if __name__ == "__main__":
@@ -454,7 +421,6 @@ if __name__ == "__main__":
             action = np.random.uniform(low=-1, high=1, size=12)
             # action = np.ones(12)
             # action[0:6] = np.zeros(6)
-            # action[0] = -1 
+            # action[2] = -1
             sim.step(action)
-            # time.sleep(0.1)
     

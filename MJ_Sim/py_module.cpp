@@ -164,7 +164,8 @@ void eef_full_jacobian(mjtNum *Full_jacobian)
     //compute the full jacobian of the end effector(link 6)
     mjtNum jacp[3*m->nv];
     mjtNum jacr[3*m->nv];
-    mj_jacGeom(m, d, jacp, jacr, int(7));
+    int geom_id=7;
+    mj_jacGeom(m, d, jacp, jacr, int(geom_id));
     for (int j = 0; j < 3*m->nv; j++)
         Full_jacobian[j] = jacp[j];
     for (int j = 0; j < 3*m->nv; j++)
@@ -724,14 +725,15 @@ extern "C"
         mjtNum jacr[24];
         mjtNum Full_jacobian[48];
         mjtNum link6_vel[6];
+        int geom_id = 7;
         for (int j = 0; j < 3; j++)
-            link6_pos[j] = d->geom_xpos[3 * 7 + j];
+            link6_pos[j] = d->geom_xpos[3 * geom_id + j];
         for (int j = 0; j < 9; j++)
-            link6_rot_mat[j] = d->geom_xmat[9 * 7 + j];
+            link6_rot_mat[j] = d->geom_xmat[9 * geom_id + j];
         mju_mat2Quat(link6_rot_quat, link6_rot_mat);
 
         //calculate jacobian
-        mj_jacGeom(m, d, jacp, jacr, int(7));
+        mj_jacGeom(m, d, jacp, jacr, int(geom_id));
         //mj_jac(m, d, jacp, jacr, link6_pos,int(7));
         for (int j = 0; j < 24; j++)
             Full_jacobian[j] = jacp[j];
