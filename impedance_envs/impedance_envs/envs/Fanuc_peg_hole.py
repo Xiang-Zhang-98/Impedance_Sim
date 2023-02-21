@@ -4,8 +4,8 @@ import os
 import sys
 import time
 import numpy as np
-from source.lrmate_kine_base import FK, IK
-import source.trajectory_cubic as traj
+from .source.lrmate_kine_base import FK, IK
+# import source.trajectory_cubic as traj
 import matplotlib.pyplot as plt
 import transforms3d.quaternions as trans_quat
 import transforms3d.euler as trans_eul
@@ -21,7 +21,8 @@ class Fanuc_peg_in_hole(gym.Env):
         super(Fanuc_peg_in_hole, self).__init__()
 
         cwd = os.getcwd()
-        self.sim = ctypes.cdll.LoadLibrary(cwd + "/bin/mujocosim.so")
+
+        self.sim = ctypes.cdll.LoadLibrary(cwd + "/impedance_envs/impedance_envs/envs/bin/mujocosim.so")
 
         # parameters which will be updated every step
         self.joint_pos = np.zeros(6)
@@ -60,13 +61,6 @@ class Fanuc_peg_in_hole(gym.Env):
             0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
         )
 
-        # initialize the simulation
-        self.n_step = 0
-        self.sim.wrapper_init()
-        self.reset()
-        self.set_seed()
-        # self.sim_step()
-
         # initialize a PD gain, may need more effort on tunning
         # kp = np.array([17, 17, 17, 17, 17, 17])
         # kv = np.array([40, 40, 40, 40, 40, 40])
@@ -76,7 +70,7 @@ class Fanuc_peg_in_hole(gym.Env):
 
         # initialize admittance gains
         self.adm_kp = 10 * np.array([1, 1, 1, 1, 1, 1])
-        self.adm_m = 0.1 * np.array([1, 1, 1, 1, 1, 1])
+        self.adm_m = 1 * np.array([1, 1, 1, 1, 1, 1])
         self.adm_kd = 2 * np.sqrt(np.multiply(self.adm_kp, self.adm_m))
         self.adm_pose_ref = np.zeros(7)
         self.adm_vel_ref = np.zeros(6)
@@ -109,6 +103,11 @@ class Fanuc_peg_in_hole(gym.Env):
         self.moving_ori_threshold = 4
 
         # RL setting
+        self.obs_high = [self.work_space_xy_limit,self.work_space_xy_limit,self.work_space_z_limit,
+                         self.work_space_rollpitch_limit,self.work_space_rollpitch_limit,self.work_space_yaw_limit,
+                         0.1,0.1,0.1,0.1,0.1,0.1,
+                         10,10,10,10,10,10]
+        self.obs_high = np.array(self.obs_high)
         self.observation_space = spaces.Box(low=-1., high=1., shape=self.get_RL_obs().shape, dtype=np.float32)
         self.action_space = spaces.Box(low=-np.ones(12), high=np.ones(12), dtype=np.float32)
         self.action_vel_high = 0.1 * np.ones(6)
@@ -116,12 +115,19 @@ class Fanuc_peg_in_hole(gym.Env):
         self.action_kp_high = 20 * np.ones(6)
         self.action_kp_low = 1 * np.ones(6)
 
+        # initialize the simulation
+        self.n_step = 0
+        self.sim.wrapper_init()
+        self.reset()
+        self.set_seed()
+
 
     def reset(self):
         init_c_pose = np.array([0.5, 0.0, 0.40, 0.0, np.pi, np.pi])
         init_j_pose = IK(init_c_pose)
         self.set_joint_states(init_j_pose, 0*init_j_pose, 0*init_j_pose)
         self.force_calibration()
+        return self.get_RL_obs()
 
 
     def set_seed(self, seed=0):
@@ -152,7 +158,10 @@ class Fanuc_peg_in_hole(gym.Env):
         eef_force = self.force_sensor_data - self.force_offset
         world_force[:3] = eef_world_rotm @ eef_force
         world_force = np.clip(world_force, -10, 10)
-        state = np.concatenate([100*eef_pos, eef_eul, 100*eef_vel, world_force])
+        state = np.concatenate([100*eef_pos, eef_eul, eef_vel, world_force])
+        # state = np.clip(state, -self.obs_high, self.obs_high)
+        # print(state)
+        # time.sleep(0.5)
         return state
 
     def process_action(self, action):
@@ -168,7 +177,7 @@ class Fanuc_peg_in_hole(gym.Env):
         self.adm_kp = desired_kp
         self.adm_kd = 2 * np.sqrt(np.multiply(self.adm_kp, self.adm_m))
         init_ob = self.get_RL_obs()
-        for i in range(10):
+        for i in range(5):
             ob = self.get_RL_obs()
             curr_force = ob[12:]
             if np.abs(np.dot(curr_force, desired_vel) / np.linalg.norm(desired_vel + 1e-6, ord=2)) > self.force_limit:
@@ -203,7 +212,9 @@ class Fanuc_peg_in_hole(gym.Env):
             # adm_eul = trans_eul.quat2euler(self.pose_vel[3:7]) + 2/ 180 * np.pi * self.moving_ori_threshold * desired_vel[3:6]/np.linalg.norm(desired_vel[3:6], ord=2)
             # self.adm_pose_ref[3:7] = trans_eul.euler2quat(adm_eul[0], adm_eul[1], adm_eul[2], axes='sxyz')
             self.adm_vel_ref = desired_vel
+            # Adm or vel ctl?
             target_joint_vel = self.admittance_control()
+            # target_joint_vel = self.Cartersian_vel_control(desired_vel)
             self.set_joint_velocity(target_joint_vel)
             self.sim_step()
 
@@ -212,14 +223,14 @@ class Fanuc_peg_in_hole(gym.Env):
         dist = np.linalg.norm(ob[0:3] - self.goal)
         if dist < 0.3:
             done = False
-            reward = 1000
+        #     reward = 100
         else:
             done = False
-            reward = np.power(10, 3 - dist)
-        reward = reward
+        #     reward = np.power(10, 2 - dist)
+        reward = -dist
         if self.evaluation and dist < 0.5:
             done = True
-        print(reward)
+        # print(reward)
         return ob, reward, done, dict(reward_dist=reward)
 
     def get_sim_time(self):
@@ -339,7 +350,7 @@ class Fanuc_peg_in_hole(gym.Env):
         self.set_reference_traj(target_pos, target_vel, target_acc)
 
     def Cartersian_vel_control(self, vel):
-        Full_Jacobian = sim.full_jacobian
+        Full_Jacobian = self.full_jacobian
         Jacobian = Full_Jacobian[:6, :6]
         target_joint_vel = np.linalg.pinv(Jacobian) @ vel
         return target_joint_vel
@@ -405,7 +416,7 @@ class Fanuc_peg_in_hole(gym.Env):
         # link6_vel = adm_vel
         # adm_vel = self.pose_vel[7:] + np.array([0.2,0,0,0,0,0])#adm_acc * T
 
-        Full_Jacobian = sim.full_jacobian
+        Full_Jacobian = self.full_jacobian
         Jacobian = Full_Jacobian[:6, :6]
         target_joint_vel = np.linalg.pinv(Jacobian) @ link6_vel
 

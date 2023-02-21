@@ -1,0 +1,1356 @@
+2023-02-20 14:53:48.607207 PST | [Fanuc_peg_in_hole_2023_02_20_14_53_21_0000--s-0] Epoch 0 finished
+---------------------------------------  ---------------
+epoch                                        0
+replay_buffer/size                       10100
+trainer/num train calls                   1000
+trainer/QF1 Loss                           222.909
+trainer/QF2 Loss                           223.75
+trainer/Policy Loss                         -8.0203
+trainer/Q1 Predictions Mean                  0.0157769
+trainer/Q1 Predictions Std                   0.0151349
+trainer/Q1 Predictions Max                   0.0872152
+trainer/Q1 Predictions Min                  -0.0047741
+trainer/Q2 Predictions Mean                 -0.0291538
+trainer/Q2 Predictions Std                   0.0285589
+trainer/Q2 Predictions Max                   0.00168845
+trainer/Q2 Predictions Min                  -0.105263
+trainer/Q Targets Mean                       9.95707
+trainer/Q Targets Std                       11.1375
+trainer/Q Targets Max                      180.472
+trainer/Q Targets Min                        5.46672
+trainer/Log Pis Mean                        -8.04943
+trainer/Log Pis Std                          0.762155
+trainer/Log Pis Max                         -5.62992
+trainer/Log Pis Min                        -10.4241
+trainer/policy/mean Mean                     0.00193156
+trainer/policy/mean Std                      0.0111044
+trainer/policy/mean Max                      0.0632847
+trainer/policy/mean Min                     -0.0322358
+trainer/policy/normal/std Mean               1.0033
+trainer/policy/normal/std Std                0.0121026
+trainer/policy/normal/std Max                1.06681
+trainer/policy/normal/std Min                0.948897
+trainer/policy/normal/log_std Mean           0.00322236
+trainer/policy/normal/log_std Std            0.0119955
+trainer/policy/normal/log_std Max            0.0646733
+trainer/policy/normal/log_std Min           -0.0524545
+trainer/Alpha                                1
+trainer/Alpha Loss                          -0
+expl/num steps total                     10100
+expl/num paths total                       404
+expl/path length Mean                       25
+expl/path length Std                         0
+expl/path length Max                        25
+expl/path length Min                        25
+expl/Rewards Mean                            1.93248
+expl/Rewards Std                             2.35259
+expl/Rewards Max                             8.80121
+expl/Rewards Min                             1.25663e-09
+expl/Returns Mean                           48.3121
+expl/Returns Std                            25.9181
+expl/Returns Max                            84.3748
+expl/Returns Min                            11.7825
+expl/Actions Mean                           -0.0408467
+expl/Actions Std                             0.639528
+expl/Actions Max                             0.997166
+expl/Actions Min                            -0.99682
+expl/Num Paths                               4
+expl/Average Returns                        48.3121
+expl/env_infos/final/reward_dist Mean        1.49652
+expl/env_infos/final/reward_dist Std         1.5101
+expl/env_infos/final/reward_dist Max         3.29128
+expl/env_infos/final/reward_dist Min         1.25663e-09
+expl/env_infos/initial/reward_dist Mean      0.307532
+expl/env_infos/initial/reward_dist Std       0.0847975
+expl/env_infos/initial/reward_dist Max       0.414587
+expl/env_infos/initial/reward_dist Min       0.20108
+expl/env_infos/reward_dist Mean              1.93248
+expl/env_infos/reward_dist Std               2.35259
+expl/env_infos/reward_dist Max               8.80121
+expl/env_infos/reward_dist Min               1.25663e-09
+eval/num steps total                       500
+eval/num paths total                        20
+eval/path length Mean                       25
+eval/path length Std                         0
+eval/path length Max                        25
+eval/path length Min                        25
+eval/Rewards Mean                            4.68062
+eval/Rewards Std                             1.45964
+eval/Rewards Max                             5.35549
+eval/Rewards Min                             0.25431
+eval/Returns Mean                          117.016
+eval/Returns Std                            15.5429
+eval/Returns Max                           120.635
+eval/Returns Min                            49.2726
+eval/Actions Mean                            6.94909e-05
+eval/Actions Std                             0.000438237
+eval/Actions Max                             0.00175217
+eval/Actions Min                            -0.00183074
+eval/Num Paths                              20
+eval/Average Returns                       117.016
+eval/env_infos/final/reward_dist Mean        5.12939
+eval/env_infos/final/reward_dist Std         0.700946
+eval/env_infos/final/reward_dist Max         5.29253
+eval/env_infos/final/reward_dist Min         2.07432
+eval/env_infos/initial/reward_dist Mean      0.260339
+eval/env_infos/initial/reward_dist Std       0.0175037
+eval/env_infos/initial/reward_dist Max       0.336609
+eval/env_infos/initial/reward_dist Min       0.25431
+eval/env_infos/reward_dist Mean              4.68062
+eval/env_infos/reward_dist Std               1.45964
+eval/env_infos/reward_dist Max               5.35549
+eval/env_infos/reward_dist Min               0.25431
+time/data storing (s)                        0.000339341
+time/evaluation sampling (s)                17.697
+time/exploration sampling (s)                0.186683
+time/logging (s)                             0.00173356
+time/sac training (s)                        5.29969
+time/saving (s)                              0.00629439
+time/training (s)                            2.4076e-05
+time/epoch (s)                              23.1917
+time/total (s)                              26.703
+Epoch                                        0
+---------------------------------------  ---------------
+2023-02-20 14:53:54.920403 PST | [Fanuc_peg_in_hole_2023_02_20_14_53_21_0000--s-0] Epoch 1 finished
+---------------------------------------  ---------------
+epoch                                        1
+replay_buffer/size                       10200
+trainer/num train calls                   2000
+trainer/QF1 Loss                            63.358
+trainer/QF2 Loss                            64.3312
+trainer/Policy Loss                        -39.0517
+trainer/Q1 Predictions Mean                 31.5289
+trainer/Q1 Predictions Std                  16.1266
+trainer/Q1 Predictions Max                 140.62
+trainer/Q1 Predictions Min                  10.4411
+trainer/Q2 Predictions Mean                 31.4088
+trainer/Q2 Predictions Std                  16.2325
+trainer/Q2 Predictions Max                 140.144
+trainer/Q2 Predictions Min                   8.65517
+trainer/Q Targets Mean                      32.4475
+trainer/Q Targets Std                       15.5106
+trainer/Q Targets Max                      114.103
+trainer/Q Targets Min                       12.2638
+trainer/Log Pis Mean                        -8.1413
+trainer/Log Pis Std                          0.615666
+trainer/Log Pis Max                         -6.17639
+trainer/Log Pis Min                        -10.1555
+trainer/policy/mean Mean                    -0.00791549
+trainer/policy/mean Std                      0.104084
+trainer/policy/mean Max                      0.29322
+trainer/policy/mean Min                     -0.392378
+trainer/policy/normal/std Mean               0.877033
+trainer/policy/normal/std Std                0.016167
+trainer/policy/normal/std Max                0.935466
+trainer/policy/normal/std Min                0.816068
+trainer/policy/normal/log_std Mean          -0.13138
+trainer/policy/normal/log_std Std            0.0184263
+trainer/policy/normal/log_std Max           -0.0667107
+trainer/policy/normal/log_std Min           -0.203258
+trainer/Alpha                                0.951216
+trainer/Alpha Loss                          -1.00735
+expl/num steps total                     10200
+expl/num paths total                       408
+expl/path length Mean                       25
+expl/path length Std                         0
+expl/path length Max                        25
+expl/path length Min                        25
+expl/Rewards Mean                            0.825129
+expl/Rewards Std                             1.00303
+expl/Rewards Max                             3.61317
+expl/Rewards Min                             1.06516e-11
+expl/Returns Mean                           20.6282
+expl/Returns Std                             3.95122
+expl/Returns Max                            25.8849
+expl/Returns Min                            14.7781
+expl/Actions Mean                            0.00462429
+expl/Actions Std                             0.590981
+expl/Actions Max                             0.994007
+expl/Actions Min                            -0.993421
+expl/Num Paths                               4
+expl/Average Returns                        20.6282
+expl/env_infos/final/reward_dist Mean        2.37335e-06
+expl/env_infos/final/reward_dist Std         2.30852e-06
+expl/env_infos/final/reward_dist Max         5.07758e-06
+expl/env_infos/final/reward_dist Min         1.06516e-11
+expl/env_infos/initial/reward_dist Mean      0.355034
+expl/env_infos/initial/reward_dist Std       0.0437279
+expl/env_infos/initial/reward_dist Max       0.401505
+expl/env_infos/initial/reward_dist Min       0.302089
+expl/env_infos/reward_dist Mean              0.825129
+expl/env_infos/reward_dist Std               1.00303
+expl/env_infos/reward_dist Max               3.61317
+expl/env_infos/reward_dist Min               1.06516e-11
+eval/num steps total                      1000
+eval/num paths total                        40
+eval/path length Mean                       25
+eval/path length Std                         0
+eval/path length Max                        25
+eval/path length Min                        25
+eval/Rewards Mean                            5.64491
+eval/Rewards Std                             1.74785
+eval/Rewards Max                             6.65744
+eval/Rewards Min                             0.354517
+eval/Returns Mean                          141.123
+eval/Returns Std                             2.07392
+eval/Returns Max                           145.977
+eval/Returns Min                           138.717
+eval/Actions Mean                           -0.00800557
+eval/Actions Std                             0.101532
+eval/Actions Max                             0.206814
+eval/Actions Min                            -0.260163
+eval/Num Paths                              20
+eval/Average Returns                       141.123
+eval/env_infos/final/reward_dist Mean        6.49894
+eval/env_infos/final/reward_dist Std         0.0858193
+eval/env_infos/final/reward_dist Max         6.65744
+eval/env_infos/final/reward_dist Min         6.39806
+eval/env_infos/initial/reward_dist Mean      0.376325
+eval/env_infos/initial/reward_dist Std       0.0142972
+eval/env_infos/initial/reward_dist Max       0.414951
+eval/env_infos/initial/reward_dist Min       0.354517
+eval/env_infos/reward_dist Mean              5.64491
+eval/env_infos/reward_dist Std               1.74785
+eval/env_infos/reward_dist Max               6.65744
+eval/env_infos/reward_dist Min               0.354517
+time/data storing (s)                        0.000338268
+time/evaluation sampling (s)                 0.564618
+time/exploration sampling (s)                0.167309
+time/logging (s)                             0.00179722
+time/sac training (s)                        5.31433
+time/saving (s)                              0.00295441
+time/training (s)                            2.3888e-05
+time/epoch (s)                               6.05137
+time/total (s)                              33.0095
+Epoch                                        1
+---------------------------------------  ---------------
+2023-02-20 14:54:01.218154 PST | [Fanuc_peg_in_hole_2023_02_20_14_53_21_0000--s-0] Epoch 2 finished
+---------------------------------------  ---------------
+epoch                                        2
+replay_buffer/size                       10300
+trainer/num train calls                   3000
+trainer/QF1 Loss                           166.221
+trainer/QF2 Loss                           165.847
+trainer/Policy Loss                        -66.7737
+trainer/Q1 Predictions Mean                 58.3205
+trainer/Q1 Predictions Std                  24.249
+trainer/Q1 Predictions Max                 164.486
+trainer/Q1 Predictions Min                  29.3402
+trainer/Q2 Predictions Mean                 58.2631
+trainer/Q2 Predictions Std                  24.2988
+trainer/Q2 Predictions Max                 164.151
+trainer/Q2 Predictions Min                  26.6653
+trainer/Q Targets Mean                      59.7491
+trainer/Q Targets Std                       30.3556
+trainer/Q Targets Max                      243.072
+trainer/Q Targets Min                       27.8958
+trainer/Log Pis Mean                        -6.92352
+trainer/Log Pis Std                          1.90198
+trainer/Log Pis Max                         -0.658727
+trainer/Log Pis Min                        -11.8998
+trainer/policy/mean Mean                     0.0529429
+trainer/policy/mean Std                      0.350566
+trainer/policy/mean Max                      0.834154
+trainer/policy/mean Min                     -0.811414
+trainer/policy/normal/std Mean               0.845232
+trainer/policy/normal/std Std                0.0445393
+trainer/policy/normal/std Max                0.920191
+trainer/policy/normal/std Min                0.672082
+trainer/policy/normal/log_std Mean          -0.169629
+trainer/policy/normal/log_std Std            0.0554382
+trainer/policy/normal/log_std Max           -0.0831744
+trainer/policy/normal/log_std Min           -0.397375
+trainer/Alpha                                0.905799
+trainer/Alpha Loss                          -1.87225
+expl/num steps total                     10300
+expl/num paths total                       412
+expl/path length Mean                       25
+expl/path length Std                         0
+expl/path length Max                        25
+expl/path length Min                        25
+expl/Rewards Mean                            3.5454
+expl/Rewards Std                             3.4462
+expl/Rewards Max                            10.7005
+expl/Rewards Min                             0.000760598
+expl/Returns Mean                           88.635
+expl/Returns Std                            50.3142
+expl/Returns Max                           166.435
+expl/Returns Min                            26.0224
+expl/Actions Mean                            0.0242698
+expl/Actions Std                             0.612233
+expl/Actions Max                             0.99523
+expl/Actions Min                            -0.994108
+expl/Num Paths                               4
+expl/Average Returns                        88.635
+expl/env_infos/final/reward_dist Mean        0.428836
+expl/env_infos/final/reward_dist Std         0.665829
+expl/env_infos/final/reward_dist Max         1.57914
+expl/env_infos/final/reward_dist Min         0.000760598
+expl/env_infos/initial/reward_dist Mean      0.275738
+expl/env_infos/initial/reward_dist Std       0.0614568
+expl/env_infos/initial/reward_dist Max       0.321813
+expl/env_infos/initial/reward_dist Min       0.169999
+expl/env_infos/reward_dist Mean              3.5454
+expl/env_infos/reward_dist Std               3.4462
+expl/env_infos/reward_dist Max              10.7005
+expl/env_infos/reward_dist Min               0.000760598
+eval/num steps total                      1500
+eval/num paths total                        60
+eval/path length Mean                       25
+eval/path length Std                         0
+eval/path length Max                        25
+eval/path length Min                        25
+eval/Rewards Mean                            2.64885
+eval/Rewards Std                             1.95453
+eval/Rewards Max                             6.88348
+eval/Rewards Min                             0.268183
+eval/Returns Mean                           66.2211
+eval/Returns Std                            37.004
+eval/Returns Max                           114.339
+eval/Returns Min                            25.4156
+eval/Actions Mean                            0.0679361
+eval/Actions Std                             0.391064
+eval/Actions Max                             0.834489
+eval/Actions Min                            -0.813252
+eval/Num Paths                              20
+eval/Average Returns                        66.2211
+eval/env_infos/final/reward_dist Mean        2.489
+eval/env_infos/final/reward_dist Std         2.01179
+eval/env_infos/final/reward_dist Max         4.9785
+eval/env_infos/final/reward_dist Min         0.268183
+eval/env_infos/initial/reward_dist Mean      0.385666
+eval/env_infos/initial/reward_dist Std       0.0536075
+eval/env_infos/initial/reward_dist Max       0.443104
+eval/env_infos/initial/reward_dist Min       0.327696
+eval/env_infos/reward_dist Mean              2.64885
+eval/env_infos/reward_dist Std               1.95453
+eval/env_infos/reward_dist Max               6.88348
+eval/env_infos/reward_dist Min               0.268183
+time/data storing (s)                        0.000345149
+time/evaluation sampling (s)                 0.528409
+time/exploration sampling (s)                0.139696
+time/logging (s)                             0.00167668
+time/sac training (s)                        5.3437
+time/saving (s)                              0.00306868
+time/training (s)                            2.6066e-05
+time/epoch (s)                               6.01692
+time/total (s)                              39.2997
+Epoch                                        2
+---------------------------------------  ---------------
+2023-02-20 14:54:08.742795 PST | [Fanuc_peg_in_hole_2023_02_20_14_53_21_0000--s-0] Epoch 3 finished
+---------------------------------------  ---------------
+epoch                                        3
+replay_buffer/size                       10400
+trainer/num train calls                   4000
+trainer/QF1 Loss                           111.22
+trainer/QF2 Loss                           113.466
+trainer/Policy Loss                        -79.2891
+trainer/Q1 Predictions Mean                 71.1704
+trainer/Q1 Predictions Std                  19.9008
+trainer/Q1 Predictions Max                 178.315
+trainer/Q1 Predictions Min                  37.4611
+trainer/Q2 Predictions Mean                 71.137
+trainer/Q2 Predictions Std                  20.0176
+trainer/Q2 Predictions Max                 177.768
+trainer/Q2 Predictions Min                  38.1305
+trainer/Q Targets Mean                      71.2806
+trainer/Q Targets Std                       23.1256
+trainer/Q Targets Max                      273.584
+trainer/Q Targets Min                       40.1
+trainer/Log Pis Mean                        -6.56796
+trainer/Log Pis Std                          2.04527
+trainer/Log Pis Max                          0.00487614
+trainer/Log Pis Min                        -11.246
+trainer/policy/mean Mean                     0.0676166
+trainer/policy/mean Std                      0.368765
+trainer/policy/mean Max                      0.860065
+trainer/policy/mean Min                     -0.820476
+trainer/policy/normal/std Mean               0.838745
+trainer/policy/normal/std Std                0.0511124
+trainer/policy/normal/std Max                0.928979
+trainer/policy/normal/std Min                0.636855
+trainer/policy/normal/log_std Mean          -0.177855
+trainer/policy/normal/log_std Std            0.0646215
+trainer/policy/normal/log_std Max           -0.073669
+trainer/policy/normal/log_std Min           -0.451213
+trainer/Alpha                                0.862893
+trainer/Alpha Loss                          -2.73813
+expl/num steps total                     10400
+expl/num paths total                       416
+expl/path length Mean                       25
+expl/path length Std                         0
+expl/path length Max                        25
+expl/path length Min                        25
+expl/Rewards Mean                            4.53358
+expl/Rewards Std                             2.85297
+expl/Rewards Max                             9.1225
+expl/Rewards Min                             0.000968974
+expl/Returns Mean                          113.34
+expl/Returns Std                            51.7075
+expl/Returns Max                           178.248
+expl/Returns Min                            35.9221
+expl/Actions Mean                            0.0428872
+expl/Actions Std                             0.59332
+expl/Actions Max                             0.995789
+expl/Actions Min                            -0.993531
+expl/Num Paths                               4
+expl/Average Returns                       113.34
+expl/env_infos/final/reward_dist Mean        2.92185
+expl/env_infos/final/reward_dist Std         1.99718
+expl/env_infos/final/reward_dist Max         5.01848
+expl/env_infos/final/reward_dist Min         0.000968974
+expl/env_infos/initial/reward_dist Mean      0.411356
+expl/env_infos/initial/reward_dist Std       0.0599539
+expl/env_infos/initial/reward_dist Max       0.460078
+expl/env_infos/initial/reward_dist Min       0.311236
+expl/env_infos/reward_dist Mean              4.53358
+expl/env_infos/reward_dist Std               2.85297
+expl/env_infos/reward_dist Max               9.1225
+expl/env_infos/reward_dist Min               0.000968974
+eval/num steps total                      2000
+eval/num paths total                        80
+eval/path length Mean                       25
+eval/path length Std                         0
+eval/path length Max                        25
+eval/path length Min                        25
+eval/Rewards Mean                            1.67175
+eval/Rewards Std                             0.284529
+eval/Rewards Max                             2.13447
+eval/Rewards Min                             0.36359
+eval/Returns Mean                           41.7938
+eval/Returns Std                             1.65853
+eval/Returns Max                            49.0226
+eval/Returns Min                            41.3166
+eval/Actions Mean                            0.0867926
+eval/Actions Std                             0.371406
+eval/Actions Max                             0.852815
+eval/Actions Min                            -0.812465
+eval/Num Paths                              20
+eval/Average Returns                        41.7938
+eval/env_infos/final/reward_dist Mean        1.7256
+eval/env_infos/final/reward_dist Std         0.077236
+eval/env_infos/final/reward_dist Max         2.06224
+eval/env_infos/final/reward_dist Min         1.70356
+eval/env_infos/initial/reward_dist Mean      0.432797
+eval/env_infos/initial/reward_dist Std       0.0158777
+eval/env_infos/initial/reward_dist Max       0.436898
+eval/env_infos/initial/reward_dist Min       0.36359
+eval/env_infos/reward_dist Mean              1.67175
+eval/env_infos/reward_dist Std               0.284529
+eval/env_infos/reward_dist Max               2.13447
+eval/env_infos/reward_dist Min               0.36359
+time/data storing (s)                        0.000336663
+time/evaluation sampling (s)                 0.532624
+time/exploration sampling (s)                0.129689
+time/logging (s)                             0.00169228
+time/sac training (s)                        6.25774
+time/saving (s)                              0.00291668
+time/training (s)                            2.3444e-05
+time/epoch (s)                               6.92503
+time/total (s)                              46.8163
+Epoch                                        3
+---------------------------------------  ---------------
+2023-02-20 14:54:15.867977 PST | [Fanuc_peg_in_hole_2023_02_20_14_53_21_0000--s-0] Epoch 4 finished
+---------------------------------------  ---------------
+epoch                                        4
+replay_buffer/size                       10500
+trainer/num train calls                   5000
+trainer/QF1 Loss                           132.818
+trainer/QF2 Loss                           132.874
+trainer/Policy Loss                        -90.8375
+trainer/Q1 Predictions Mean                 83.2159
+trainer/Q1 Predictions Std                  32.5627
+trainer/Q1 Predictions Max                 240.497
+trainer/Q1 Predictions Min                  42.7254
+trainer/Q2 Predictions Mean                 83.2847
+trainer/Q2 Predictions Std                  32.4979
+trainer/Q2 Predictions Max                 239.657
+trainer/Q2 Predictions Min                  42.859
+trainer/Q Targets Mean                      82.6993
+trainer/Q Targets Std                       34.3139
+trainer/Q Targets Max                      275.993
+trainer/Q Targets Min                       43.5787
+trainer/Log Pis Mean                        -6.74786
+trainer/Log Pis Std                          1.83346
+trainer/Log Pis Max                         -1.22585
+trainer/Log Pis Min                         -9.85346
+trainer/policy/mean Mean                     0.0695877
+trainer/policy/mean Std                      0.346019
+trainer/policy/mean Max                      0.82549
+trainer/policy/mean Min                     -0.847147
+trainer/policy/normal/std Mean               0.845224
+trainer/policy/normal/std Std                0.0506478
+trainer/policy/normal/std Max                0.982556
+trainer/policy/normal/std Min                0.641173
+trainer/policy/normal/log_std Mean          -0.170097
+trainer/policy/normal/log_std Std            0.063627
+trainer/policy/normal/log_std Max           -0.0175975
+trainer/policy/normal/log_std Min           -0.444456
+trainer/Alpha                                0.821247
+trainer/Alpha Loss                          -3.69205
+expl/num steps total                     10500
+expl/num paths total                       420
+expl/path length Mean                       25
+expl/path length Std                         0
+expl/path length Max                        25
+expl/path length Min                        25
+expl/Rewards Mean                            0.950765
+expl/Rewards Std                             1.30203
+expl/Rewards Max                             5.88643
+expl/Rewards Min                             6.11059e-07
+expl/Returns Mean                           23.7691
+expl/Returns Std                            16.78
+expl/Returns Max                            50.4732
+expl/Returns Min                             6.33351
+expl/Actions Mean                            0.0592213
+expl/Actions Std                             0.613737
+expl/Actions Max                             0.995233
+expl/Actions Min                            -0.993424
+expl/Num Paths                               4
+expl/Average Returns                        23.7691
+expl/env_infos/final/reward_dist Mean        0.977773
+expl/env_infos/final/reward_dist Std         0.888563
+expl/env_infos/final/reward_dist Max         2.34515
+expl/env_infos/final/reward_dist Min         5.48578e-05
+expl/env_infos/initial/reward_dist Mean      0.419399
+expl/env_infos/initial/reward_dist Std       0.0222921
+expl/env_infos/initial/reward_dist Max       0.453313
+expl/env_infos/initial/reward_dist Min       0.390714
+expl/env_infos/reward_dist Mean              0.950765
+expl/env_infos/reward_dist Std               1.30203
+expl/env_infos/reward_dist Max               5.88643
+expl/env_infos/reward_dist Min               6.11059e-07
+eval/num steps total                      2500
+eval/num paths total                       100
+eval/path length Mean                       25
+eval/path length Std                         0
+eval/path length Max                        25
+eval/path length Min                        25
+eval/Rewards Mean                            0.139788
+eval/Rewards Std                             0.311813
+eval/Rewards Max                             1.46113
+eval/Rewards Min                             0.000209206
+eval/Returns Mean                            3.49471
+eval/Returns Std                             0.334087
+eval/Returns Max                             4.38757
+eval/Returns Min                             2.79623
+eval/Actions Mean                            0.106314
+eval/Actions Std                             0.45712
+eval/Actions Max                             0.83256
+eval/Actions Min                            -0.877634
+eval/Num Paths                              20
+eval/Average Returns                         3.49471
+eval/env_infos/final/reward_dist Mean        0.00137183
+eval/env_infos/final/reward_dist Std         0.00139977
+eval/env_infos/final/reward_dist Max         0.0065521
+eval/env_infos/final/reward_dist Min         0.000209206
+eval/env_infos/initial/reward_dist Mean      0.394427
+eval/env_infos/initial/reward_dist Std       0.06803
+eval/env_infos/initial/reward_dist Max       0.440438
+eval/env_infos/initial/reward_dist Min       0.261142
+eval/env_infos/reward_dist Mean              0.139788
+eval/env_infos/reward_dist Std               0.311813
+eval/env_infos/reward_dist Max               1.46113
+eval/env_infos/reward_dist Min               0.000209206
+time/data storing (s)                        0.000343226
+time/evaluation sampling (s)                 1.00731
+time/exploration sampling (s)                0.245428
+time/logging (s)                             0.00242448
+time/sac training (s)                        5.55279
+time/saving (s)                              0.00296451
+time/training (s)                            2.3198e-05
+time/epoch (s)                               6.81129
+time/total (s)                              53.9348
+Epoch                                        4
+---------------------------------------  ---------------
+2023-02-20 14:54:22.226552 PST | [Fanuc_peg_in_hole_2023_02_20_14_53_21_0000--s-0] Epoch 5 finished
+---------------------------------------  ---------------
+epoch                                        5
+replay_buffer/size                       10600
+trainer/num train calls                   6000
+trainer/QF1 Loss                           169.189
+trainer/QF2 Loss                           177.572
+trainer/Policy Loss                        -91.0176
+trainer/Q1 Predictions Mean                 83.7626
+trainer/Q1 Predictions Std                  29.0012
+trainer/Q1 Predictions Max                 248.292
+trainer/Q1 Predictions Min                  43.754
+trainer/Q2 Predictions Mean                 83.7148
+trainer/Q2 Predictions Std                  28.7663
+trainer/Q2 Predictions Max                 247.244
+trainer/Q2 Predictions Min                  44.3439
+trainer/Q Targets Mean                      84.2701
+trainer/Q Targets Std                       32.777
+trainer/Q Targets Max                      249.646
+trainer/Q Targets Min                       38.4576
+trainer/Log Pis Mean                        -6.5548
+trainer/Log Pis Std                          1.90499
+trainer/Log Pis Max                         -1.21886
+trainer/Log Pis Min                        -11.6907
+trainer/policy/mean Mean                     0.0514996
+trainer/policy/mean Std                      0.363104
+trainer/policy/mean Max                      0.821137
+trainer/policy/mean Min                     -0.890784
+trainer/policy/normal/std Mean               0.843461
+trainer/policy/normal/std Std                0.0534101
+trainer/policy/normal/std Max                0.969607
+trainer/policy/normal/std Min                0.629731
+trainer/policy/normal/log_std Mean          -0.172418
+trainer/policy/normal/log_std Std            0.0673649
+trainer/policy/normal/log_std Max           -0.0308644
+trainer/policy/normal/log_std Min           -0.462462
+trainer/Alpha                                0.781437
+trainer/Alpha Loss                          -4.576
+expl/num steps total                     10600
+expl/num paths total                       424
+expl/path length Mean                       25
+expl/path length Std                         0
+expl/path length Max                        25
+expl/path length Min                        25
+expl/Rewards Mean                            0.795062
+expl/Rewards Std                             1.25865
+expl/Rewards Max                             4.46169
+expl/Rewards Min                             0.00476326
+expl/Returns Mean                           19.8766
+expl/Returns Std                            20.1573
+expl/Returns Max                            54.6902
+expl/Returns Min                             6.7721
+expl/Actions Mean                            0.0545271
+expl/Actions Std                             0.619932
+expl/Actions Max                             0.995216
+expl/Actions Min                            -0.995263
+expl/Num Paths                               4
+expl/Average Returns                        19.8766
+expl/env_infos/final/reward_dist Mean        1.87665
+expl/env_infos/final/reward_dist Std         1.65133
+expl/env_infos/final/reward_dist Max         4.46169
+expl/env_infos/final/reward_dist Min         0.0439537
+expl/env_infos/initial/reward_dist Mean      0.414814
+expl/env_infos/initial/reward_dist Std       0.0414671
+expl/env_infos/initial/reward_dist Max       0.442296
+expl/env_infos/initial/reward_dist Min       0.343091
+expl/env_infos/reward_dist Mean              0.795062
+expl/env_infos/reward_dist Std               1.25865
+expl/env_infos/reward_dist Max               4.46169
+expl/env_infos/reward_dist Min               0.00476326
+eval/num steps total                      3000
+eval/num paths total                       120
+eval/path length Mean                       25
+eval/path length Std                         0
+eval/path length Max                        25
+eval/path length Min                        25
+eval/Rewards Mean                            0.107629
+eval/Rewards Std                             0.259358
+eval/Rewards Max                             1.2113
+eval/Rewards Min                             0.000370496
+eval/Returns Mean                            2.69073
+eval/Returns Std                             0.598067
+eval/Returns Max                             3.31912
+eval/Returns Min                             1.8955
+eval/Actions Mean                            0.0746236
+eval/Actions Std                             0.440183
+eval/Actions Max                             0.808071
+eval/Actions Min                            -0.882215
+eval/Num Paths                              20
+eval/Average Returns                         2.69073
+eval/env_infos/final/reward_dist Mean        0.00468743
+eval/env_infos/final/reward_dist Std         0.0049635
+eval/env_infos/final/reward_dist Max         0.0122444
+eval/env_infos/final/reward_dist Min         0.000957787
+eval/env_infos/initial/reward_dist Mean      0.393779
+eval/env_infos/initial/reward_dist Std       0.0606758
+eval/env_infos/initial/reward_dist Max       0.442018
+eval/env_infos/initial/reward_dist Min       0.310241
+eval/env_infos/reward_dist Mean              0.107629
+eval/env_infos/reward_dist Std               0.259358
+eval/env_infos/reward_dist Max               1.2113
+eval/env_infos/reward_dist Min               0.000370496
+time/data storing (s)                        0.00034245
+time/evaluation sampling (s)                 0.689448
+time/exploration sampling (s)                0.16201
+time/logging (s)                             0.00171514
+time/sac training (s)                        5.24904
+time/saving (s)                              0.00293651
+time/training (s)                            2.3575e-05
+time/epoch (s)                               6.10552
+time/total (s)                              60.2855
+Epoch                                        5
+---------------------------------------  ---------------
+2023-02-20 14:54:28.819377 PST | [Fanuc_peg_in_hole_2023_02_20_14_53_21_0000--s-0] Epoch 6 finished
+---------------------------------------  ---------------
+epoch                                        6
+replay_buffer/size                       10700
+trainer/num train calls                   7000
+trainer/QF1 Loss                           193.864
+trainer/QF2 Loss                           194.415
+trainer/Policy Loss                        -89.9493
+trainer/Q1 Predictions Mean                 82.8603
+trainer/Q1 Predictions Std                  29.1633
+trainer/Q1 Predictions Max                 261.627
+trainer/Q1 Predictions Min                  41.8365
+trainer/Q2 Predictions Mean                 82.87
+trainer/Q2 Predictions Std                  29.1648
+trainer/Q2 Predictions Max                 260.527
+trainer/Q2 Predictions Min                  42.7795
+trainer/Q Targets Mean                      83.9065
+trainer/Q Targets Std                       32
+trainer/Q Targets Max                      258.892
+trainer/Q Targets Min                       38.4329
+trainer/Log Pis Mean                        -6.47123
+trainer/Log Pis Std                          1.87558
+trainer/Log Pis Max                         -1.1969
+trainer/Log Pis Min                        -10.3857
+trainer/policy/mean Mean                     0.0636049
+trainer/policy/mean Std                      0.374239
+trainer/policy/mean Max                      0.849686
+trainer/policy/mean Min                     -0.899858
+trainer/policy/normal/std Mean               0.841184
+trainer/policy/normal/std Std                0.0566791
+trainer/policy/normal/std Max                0.940405
+trainer/policy/normal/std Min                0.616509
+trainer/policy/normal/log_std Mean          -0.175416
+trainer/policy/normal/log_std Std            0.0718411
+trainer/policy/normal/log_std Max           -0.0614446
+trainer/policy/normal/log_std Min           -0.483683
+trainer/Alpha                                0.743434
+trainer/Alpha Loss                          -5.47627
+expl/num steps total                     10700
+expl/num paths total                       428
+expl/path length Mean                       25
+expl/path length Std                         0
+expl/path length Max                        25
+expl/path length Min                        25
+expl/Rewards Mean                            1.55619
+expl/Rewards Std                             3.58486
+expl/Rewards Max                            23.1041
+expl/Rewards Min                             0.000279875
+expl/Returns Mean                           38.9047
+expl/Returns Std                            54.8705
+expl/Returns Max                           133.906
+expl/Returns Min                             4.78399
+expl/Actions Mean                            0.0516301
+expl/Actions Std                             0.624154
+expl/Actions Max                             0.992781
+expl/Actions Min                            -0.988486
+expl/Num Paths                               4
+expl/Average Returns                        38.9047
+expl/env_infos/final/reward_dist Mean        0.350275
+expl/env_infos/final/reward_dist Std         0.573185
+expl/env_infos/final/reward_dist Max         1.34235
+expl/env_infos/final/reward_dist Min         0.0014816
+expl/env_infos/initial/reward_dist Mean      0.4176
+expl/env_infos/initial/reward_dist Std       0.0277558
+expl/env_infos/initial/reward_dist Max       0.447791
+expl/env_infos/initial/reward_dist Min       0.384205
+expl/env_infos/reward_dist Mean              1.55619
+expl/env_infos/reward_dist Std               3.58486
+expl/env_infos/reward_dist Max              23.1041
+expl/env_infos/reward_dist Min               0.000279875
+eval/num steps total                      3500
+eval/num paths total                       140
+eval/path length Mean                       25
+eval/path length Std                         0
+eval/path length Max                        25
+eval/path length Min                        25
+eval/Rewards Mean                            0.111915
+eval/Rewards Std                             0.275425
+eval/Rewards Max                             1.23631
+eval/Rewards Min                             0.000304053
+eval/Returns Mean                            2.79787
+eval/Returns Std                             0.397648
+eval/Returns Max                             3.29037
+eval/Returns Min                             2.3114
+eval/Actions Mean                            0.0986705
+eval/Actions Std                             0.4316
+eval/Actions Max                             0.837873
+eval/Actions Min                            -0.910132
+eval/Num Paths                              20
+eval/Average Returns                         2.79787
+eval/env_infos/final/reward_dist Mean        0.00100244
+eval/env_infos/final/reward_dist Std         0.000427508
+eval/env_infos/final/reward_dist Max         0.00160335
+eval/env_infos/final/reward_dist Min         0.000534995
+eval/env_infos/initial/reward_dist Mean      0.433029
+eval/env_infos/initial/reward_dist Std       0.00755613
+eval/env_infos/initial/reward_dist Max       0.442663
+eval/env_infos/initial/reward_dist Min       0.424655
+eval/env_infos/reward_dist Mean              0.111915
+eval/env_infos/reward_dist Std               0.275425
+eval/env_infos/reward_dist Max               1.23631
+eval/env_infos/reward_dist Min               0.000304053
+time/data storing (s)                        0.000345585
+time/evaluation sampling (s)                 0.740914
+time/exploration sampling (s)                0.190551
+time/logging (s)                             0.00169912
+time/sac training (s)                        5.36646
+time/saving (s)                              0.00295316
+time/training (s)                            3.1386e-05
+time/epoch (s)                               6.30295
+time/total (s)                              66.8709
+Epoch                                        6
+---------------------------------------  ---------------
+2023-02-20 14:54:35.359389 PST | [Fanuc_peg_in_hole_2023_02_20_14_53_21_0000--s-0] Epoch 7 finished
+---------------------------------------  ---------------
+epoch                                        7
+replay_buffer/size                       10800
+trainer/num train calls                   8000
+trainer/QF1 Loss                           122.17
+trainer/QF2 Loss                           119.458
+trainer/Policy Loss                        -86.6402
+trainer/Q1 Predictions Mean                 80.0836
+trainer/Q1 Predictions Std                  28.9886
+trainer/Q1 Predictions Max                 268.651
+trainer/Q1 Predictions Min                  34.2781
+trainer/Q2 Predictions Mean                 80.0882
+trainer/Q2 Predictions Std                  28.9975
+trainer/Q2 Predictions Max                 267.153
+trainer/Q2 Predictions Min                  29.5051
+trainer/Q Targets Mean                      81.269
+trainer/Q Targets Std                       28.7787
+trainer/Q Targets Max                      267.263
+trainer/Q Targets Min                       31.4781
+trainer/Log Pis Mean                        -6.58762
+trainer/Log Pis Std                          1.92463
+trainer/Log Pis Max                         -0.0973091
+trainer/Log Pis Min                        -11.5651
+trainer/policy/mean Mean                     0.0586576
+trainer/policy/mean Std                      0.358055
+trainer/policy/mean Max                      0.842443
+trainer/policy/mean Min                     -0.909475
+trainer/policy/normal/std Mean               0.844457
+trainer/policy/normal/std Std                0.0532979
+trainer/policy/normal/std Max                0.957468
+trainer/policy/normal/std Min                0.597329
+trainer/policy/normal/log_std Mean          -0.17125
+trainer/policy/normal/log_std Std            0.0677919
+trainer/policy/normal/log_std Max           -0.0434634
+trainer/policy/normal/log_std Min           -0.515288
+trainer/Alpha                                0.707245
+trainer/Alpha Loss                          -6.43834
+expl/num steps total                     10800
+expl/num paths total                       432
+expl/path length Mean                       25
+expl/path length Std                         0
+expl/path length Max                        25
+expl/path length Min                        25
+expl/Rewards Mean                            0.762527
+expl/Rewards Std                             1.06598
+expl/Rewards Max                             4.16031
+expl/Rewards Min                             4.50806e-06
+expl/Returns Mean                           19.0632
+expl/Returns Std                             7.26252
+expl/Returns Max                            28.3004
+expl/Returns Min                             8.05795
+expl/Actions Mean                            0.0267921
+expl/Actions Std                             0.607049
+expl/Actions Max                             0.995049
+expl/Actions Min                            -0.996036
+expl/Num Paths                               4
+expl/Average Returns                        19.0632
+expl/env_infos/final/reward_dist Mean        0.750151
+expl/env_infos/final/reward_dist Std         1.29919
+expl/env_infos/final/reward_dist Max         3.00041
+expl/env_infos/final/reward_dist Min         4.50806e-06
+expl/env_infos/initial/reward_dist Mean      0.346856
+expl/env_infos/initial/reward_dist Std       0.0259205
+expl/env_infos/initial/reward_dist Max       0.377756
+expl/env_infos/initial/reward_dist Min       0.311956
+expl/env_infos/reward_dist Mean              0.762527
+expl/env_infos/reward_dist Std               1.06598
+expl/env_infos/reward_dist Max               4.16031
+expl/env_infos/reward_dist Min               4.50806e-06
+eval/num steps total                      4000
+eval/num paths total                       160
+eval/path length Mean                       25
+eval/path length Std                         0
+eval/path length Max                        25
+eval/path length Min                        25
+eval/Rewards Mean                            0.188366
+eval/Rewards Std                             0.440443
+eval/Rewards Max                             3.57228
+eval/Rewards Min                             0.00013803
+eval/Returns Mean                            4.70915
+eval/Returns Std                             5.99437
+eval/Returns Max                            22.647
+eval/Returns Min                             1.8645
+eval/Actions Mean                            0.0781136
+eval/Actions Std                             0.458768
+eval/Actions Max                             0.83082
+eval/Actions Min                            -0.90905
+eval/Num Paths                              20
+eval/Average Returns                         4.70915
+eval/env_infos/final/reward_dist Mean        0.150146
+eval/env_infos/final/reward_dist Std         0.444236
+eval/env_infos/final/reward_dist Max         1.48333
+eval/env_infos/final/reward_dist Min         0.000586815
+eval/env_infos/initial/reward_dist Mean      0.398507
+eval/env_infos/initial/reward_dist Std       0.0389252
+eval/env_infos/initial/reward_dist Max       0.438217
+eval/env_infos/initial/reward_dist Min       0.297271
+eval/env_infos/reward_dist Mean              0.188366
+eval/env_infos/reward_dist Std               0.440443
+eval/env_infos/reward_dist Max               3.57228
+eval/env_infos/reward_dist Min               0.00013803
+time/data storing (s)                        0.000335804
+time/evaluation sampling (s)                 0.844614
+time/exploration sampling (s)                0.167241
+time/logging (s)                             0.001678
+time/sac training (s)                        5.26484
+time/saving (s)                              0.00300987
+time/training (s)                            2.8538e-05
+time/epoch (s)                               6.28175
+time/total (s)                              73.4041
+Epoch                                        7
+---------------------------------------  ---------------
+2023-02-20 14:54:42.107965 PST | [Fanuc_peg_in_hole_2023_02_20_14_53_21_0000--s-0] Epoch 8 finished
+---------------------------------------  ---------------
+epoch                                        8
+replay_buffer/size                       10900
+trainer/num train calls                   9000
+trainer/QF1 Loss                            83.49
+trainer/QF2 Loss                            85.1461
+trainer/Policy Loss                        -82.9082
+trainer/Q1 Predictions Mean                 76.7151
+trainer/Q1 Predictions Std                  26.2225
+trainer/Q1 Predictions Max                 245.564
+trainer/Q1 Predictions Min                  32.9243
+trainer/Q2 Predictions Mean                 76.7793
+trainer/Q2 Predictions Std                  26.4361
+trainer/Q2 Predictions Max                 247.26
+trainer/Q2 Predictions Min                  30.9463
+trainer/Q Targets Mean                      76.516
+trainer/Q Targets Std                       27.1369
+trainer/Q Targets Max                      257.322
+trainer/Q Targets Min                       32.931
+trainer/Log Pis Mean                        -6.56073
+trainer/Log Pis Std                          2.18437
+trainer/Log Pis Max                          2.36854
+trainer/Log Pis Min                        -13.0238
+trainer/policy/mean Mean                     0.060677
+trainer/policy/mean Std                      0.356038
+trainer/policy/mean Max                      0.879859
+trainer/policy/mean Min                     -0.924204
+trainer/policy/normal/std Mean               0.84782
+trainer/policy/normal/std Std                0.0565158
+trainer/policy/normal/std Max                0.939816
+trainer/policy/normal/std Min                0.592876
+trainer/policy/normal/log_std Mean          -0.167565
+trainer/policy/normal/log_std Std            0.0723843
+trainer/policy/normal/log_std Max           -0.0620709
+trainer/policy/normal/log_std Min           -0.522771
+trainer/Alpha                                0.672848
+trainer/Alpha Loss                          -7.35442
+expl/num steps total                     10900
+expl/num paths total                       436
+expl/path length Mean                       25
+expl/path length Std                         0
+expl/path length Max                        25
+expl/path length Min                        25
+expl/Rewards Mean                            0.491032
+expl/Rewards Std                             0.824905
+expl/Rewards Max                             3.08839
+expl/Rewards Min                             5.49123e-05
+expl/Returns Mean                           12.2758
+expl/Returns Std                             9.33872
+expl/Returns Max                            24.7453
+expl/Returns Min                             2.78663
+expl/Actions Mean                            0.0497211
+expl/Actions Std                             0.63472
+expl/Actions Max                             0.995153
+expl/Actions Min                            -0.996967
+expl/Num Paths                               4
+expl/Average Returns                        12.2758
+expl/env_infos/final/reward_dist Mean        0.0358354
+expl/env_infos/final/reward_dist Std         0.0612359
+expl/env_infos/final/reward_dist Max         0.141898
+expl/env_infos/final/reward_dist Min         0.000122283
+expl/env_infos/initial/reward_dist Mean      0.3511
+expl/env_infos/initial/reward_dist Std       0.096149
+expl/env_infos/initial/reward_dist Max       0.448602
+expl/env_infos/initial/reward_dist Min       0.20626
+expl/env_infos/reward_dist Mean              0.491032
+expl/env_infos/reward_dist Std               0.824905
+expl/env_infos/reward_dist Max               3.08839
+expl/env_infos/reward_dist Min               5.49123e-05
+eval/num steps total                      4500
+eval/num paths total                       180
+eval/path length Mean                       25
+eval/path length Std                         0
+eval/path length Max                        25
+eval/path length Min                        25
+eval/Rewards Mean                            0.134299
+eval/Rewards Std                             0.315674
+eval/Rewards Max                             1.22009
+eval/Rewards Min                             0.000359763
+eval/Returns Mean                            3.35746
+eval/Returns Std                             0.390779
+eval/Returns Max                             5.05609
+eval/Returns Min                             3.14161
+eval/Actions Mean                            0.11196
+eval/Actions Std                             0.466723
+eval/Actions Max                             0.848687
+eval/Actions Min                            -0.913367
+eval/Num Paths                              20
+eval/Average Returns                         3.35746
+eval/env_infos/final/reward_dist Mean        0.0108974
+eval/env_infos/final/reward_dist Std         0.0427583
+eval/env_infos/final/reward_dist Max         0.197276
+eval/env_infos/final/reward_dist Min         0.00108137
+eval/env_infos/initial/reward_dist Mean      0.429536
+eval/env_infos/initial/reward_dist Std       0.00277479
+eval/env_infos/initial/reward_dist Max       0.439634
+eval/env_infos/initial/reward_dist Min       0.428354
+eval/env_infos/reward_dist Mean              0.134299
+eval/env_infos/reward_dist Std               0.315674
+eval/env_infos/reward_dist Max               1.22009
+eval/env_infos/reward_dist Min               0.000359763
+time/data storing (s)                        0.000346211
+time/evaluation sampling (s)                 1.00272
+time/exploration sampling (s)                0.208659
+time/logging (s)                             0.00168665
+time/sac training (s)                        5.2779
+time/saving (s)                              0.00294362
+time/training (s)                            2.2495e-05
+time/epoch (s)                               6.49428
+time/total (s)                              80.1459
+Epoch                                        8
+---------------------------------------  ---------------
+2023-02-20 14:54:48.476211 PST | [Fanuc_peg_in_hole_2023_02_20_14_53_21_0000--s-0] Epoch 9 finished
+---------------------------------------  ---------------
+epoch                                        9
+replay_buffer/size                       11000
+trainer/num train calls                  10000
+trainer/QF1 Loss                           129.468
+trainer/QF2 Loss                           129.512
+trainer/Policy Loss                        -82.7798
+trainer/Q1 Predictions Mean                 76.9935
+trainer/Q1 Predictions Std                  29.213
+trainer/Q1 Predictions Max                 261.695
+trainer/Q1 Predictions Min                  37.8462
+trainer/Q2 Predictions Mean                 77.0017
+trainer/Q2 Predictions Std                  29.2796
+trainer/Q2 Predictions Max                 265.338
+trainer/Q2 Predictions Min                  38.4466
+trainer/Q Targets Mean                      77.2471
+trainer/Q Targets Std                       29.8455
+trainer/Q Targets Max                      266.055
+trainer/Q Targets Min                       39.5599
+trainer/Log Pis Mean                        -6.5559
+trainer/Log Pis Std                          2.09602
+trainer/Log Pis Max                         -0.158688
+trainer/Log Pis Min                        -12.5296
+trainer/policy/mean Mean                     0.0450347
+trainer/policy/mean Std                      0.350624
+trainer/policy/mean Max                      0.837152
+trainer/policy/mean Min                     -0.893142
+trainer/policy/normal/std Mean               0.848471
+trainer/policy/normal/std Std                0.0515815
+trainer/policy/normal/std Max                0.96193
+trainer/policy/normal/std Min                0.581595
+trainer/policy/normal/log_std Mean          -0.166362
+trainer/policy/normal/log_std Std            0.0655664
+trainer/policy/normal/log_std Max           -0.0388131
+trainer/policy/normal/log_std Min           -0.541981
+trainer/Alpha                                0.640056
+trainer/Alpha Loss                          -8.27964
+expl/num steps total                     11000
+expl/num paths total                       440
+expl/path length Mean                       25
+expl/path length Std                         0
+expl/path length Max                        25
+expl/path length Min                        25
+expl/Rewards Mean                            1.5907
+expl/Rewards Std                             2.39584
+expl/Rewards Max                             8.36448
+expl/Rewards Min                             9.56659e-05
+expl/Returns Mean                           39.7676
+expl/Returns Std                            35.9761
+expl/Returns Max                            98.2493
+expl/Returns Min                             6.1737
+expl/Actions Mean                            0.0593008
+expl/Actions Std                             0.612982
+expl/Actions Max                             0.996177
+expl/Actions Min                            -0.995129
+expl/Num Paths                               4
+expl/Average Returns                        39.7676
+expl/env_infos/final/reward_dist Mean        0.496795
+expl/env_infos/final/reward_dist Std         0.776229
+expl/env_infos/final/reward_dist Max         1.83941
+expl/env_infos/final/reward_dist Min         0.00060534
+expl/env_infos/initial/reward_dist Mean      0.367958
+expl/env_infos/initial/reward_dist Std       0.0567762
+expl/env_infos/initial/reward_dist Max       0.441985
+expl/env_infos/initial/reward_dist Min       0.29077
+expl/env_infos/reward_dist Mean              1.5907
+expl/env_infos/reward_dist Std               2.39584
+expl/env_infos/reward_dist Max               8.36448
+expl/env_infos/reward_dist Min               9.56659e-05
+eval/num steps total                      5000
+eval/num paths total                       200
+eval/path length Mean                       25
+eval/path length Std                         0
+eval/path length Max                        25
+eval/path length Min                        25
+eval/Rewards Mean                            0.139212
+eval/Rewards Std                             0.326108
+eval/Rewards Max                             1.22589
+eval/Rewards Min                             0.00204637
+eval/Returns Mean                            3.4803
+eval/Returns Std                             0.0346999
+eval/Returns Max                             3.48931
+eval/Returns Min                             3.32914
+eval/Actions Mean                            0.0758669
+eval/Actions Std                             0.41222
+eval/Actions Max                             0.793476
+eval/Actions Min                            -0.891032
+eval/Num Paths                              20
+eval/Average Returns                         3.4803
+eval/env_infos/final/reward_dist Mean        0.00494231
+eval/env_infos/final/reward_dist Std         0.000161882
+eval/env_infos/final/reward_dist Max         0.00498499
+eval/env_infos/final/reward_dist Min         0.00423725
+eval/env_infos/initial/reward_dist Mean      0.432641
+eval/env_infos/initial/reward_dist Std       0.00138003
+eval/env_infos/initial/reward_dist Max       0.438647
+eval/env_infos/initial/reward_dist Min       0.432279
+eval/env_infos/reward_dist Mean              0.139212
+eval/env_infos/reward_dist Std               0.326108
+eval/env_infos/reward_dist Max               1.22589
+eval/env_infos/reward_dist Min               0.00204637
+time/data storing (s)                        0.000334357
+time/evaluation sampling (s)                 0.676128
+time/exploration sampling (s)                0.168065
+time/logging (s)                             0.00171737
+time/sac training (s)                        5.26208
+time/saving (s)                              0.0029626
+time/training (s)                            2.2964e-05
+time/epoch (s)                               6.11131
+time/total (s)                              86.5074
+Epoch                                        9
+---------------------------------------  ---------------
+2023-02-20 14:54:54.819908 PST | [Fanuc_peg_in_hole_2023_02_20_14_53_21_0000--s-0] Epoch 10 finished
+---------------------------------------  ---------------
+epoch                                       10
+replay_buffer/size                       11100
+trainer/num train calls                  11000
+trainer/QF1 Loss                           253.136
+trainer/QF2 Loss                           257.123
+trainer/Policy Loss                        -84.0456
+trainer/Q1 Predictions Mean                 78.3258
+trainer/Q1 Predictions Std                  38.5699
+trainer/Q1 Predictions Max                 272.304
+trainer/Q1 Predictions Min                  36.735
+trainer/Q2 Predictions Mean                 78.3637
+trainer/Q2 Predictions Std                  38.7126
+trainer/Q2 Predictions Max                 274.056
+trainer/Q2 Predictions Min                  35.9778
+trainer/Q Targets Mean                      78.059
+trainer/Q Targets Std                       37.8213
+trainer/Q Targets Max                      271.283
+trainer/Q Targets Min                       36.8155
+trainer/Log Pis Mean                        -6.2233
+trainer/Log Pis Std                          2.2429
+trainer/Log Pis Max                          2.334
+trainer/Log Pis Min                        -10.5259
+trainer/policy/mean Mean                     0.0448019
+trainer/policy/mean Std                      0.378402
+trainer/policy/mean Max                      0.838761
+trainer/policy/mean Min                     -0.913055
+trainer/policy/normal/std Mean               0.84889
+trainer/policy/normal/std Std                0.0581747
+trainer/policy/normal/std Max                0.979514
+trainer/policy/normal/std Min                0.581019
+trainer/policy/normal/log_std Mean          -0.166409
+trainer/policy/normal/log_std Std            0.07366
+trainer/policy/normal/log_std Max           -0.0206987
+trainer/policy/normal/log_std Min           -0.542972
+trainer/Alpha                                0.608831
+trainer/Alpha Loss                          -9.04268
+expl/num steps total                     11100
+expl/num paths total                       444
+expl/path length Mean                       25
+expl/path length Std                         0
+expl/path length Max                        25
+expl/path length Min                        25
+expl/Rewards Mean                            0.807431
+expl/Rewards Std                             1.33066
+expl/Rewards Max                             5.30202
+expl/Rewards Min                             0.00126471
+expl/Returns Mean                           20.1858
+expl/Returns Std                            16.8448
+expl/Returns Max                            48.3687
+expl/Returns Min                             6.1319
+expl/Actions Mean                            0.0385942
+expl/Actions Std                             0.626308
+expl/Actions Max                             0.992235
+expl/Actions Min                            -0.993046
+expl/Num Paths                               4
+expl/Average Returns                        20.1858
+expl/env_infos/final/reward_dist Mean        0.939384
+expl/env_infos/final/reward_dist Std         1.02533
+expl/env_infos/final/reward_dist Max         2.63613
+expl/env_infos/final/reward_dist Min         0.00126471
+expl/env_infos/initial/reward_dist Mean      0.392734
+expl/env_infos/initial/reward_dist Std       0.0417385
+expl/env_infos/initial/reward_dist Max       0.450922
+expl/env_infos/initial/reward_dist Min       0.350528
+expl/env_infos/reward_dist Mean              0.807431
+expl/env_infos/reward_dist Std               1.33066
+expl/env_infos/reward_dist Max               5.30202
+expl/env_infos/reward_dist Min               0.00126471
+eval/num steps total                      5500
+eval/num paths total                       220
+eval/path length Mean                       25
+eval/path length Std                         0
+eval/path length Max                        25
+eval/path length Min                        25
+eval/Rewards Mean                            0.292965
+eval/Rewards Std                             0.295246
+eval/Rewards Max                             1.27464
+eval/Rewards Min                             0.163186
+eval/Returns Mean                            7.32412
+eval/Returns Std                             0.0453368
+eval/Returns Max                             7.33473
+eval/Returns Min                             7.12653
+eval/Actions Mean                            0.0545599
+eval/Actions Std                             0.40365
+eval/Actions Max                             0.777285
+eval/Actions Min                            -0.885246
+eval/Num Paths                              20
+eval/Average Returns                         7.32412
+eval/env_infos/final/reward_dist Mean        0.185124
+eval/env_infos/final/reward_dist Std         0.00151224
+eval/env_infos/final/reward_dist Max         0.185479
+eval/env_infos/final/reward_dist Min         0.178533
+eval/env_infos/initial/reward_dist Mean      0.43583
+eval/env_infos/initial/reward_dist Std       0.00140591
+eval/env_infos/initial/reward_dist Max       0.441955
+eval/env_infos/initial/reward_dist Min       0.435496
+eval/env_infos/reward_dist Mean              0.292965
+eval/env_infos/reward_dist Std               0.295246
+eval/env_infos/reward_dist Max               1.27464
+eval/env_infos/reward_dist Min               0.163186
+time/data storing (s)                        0.000340282
+time/evaluation sampling (s)                 0.575023
+time/exploration sampling (s)                0.175088
+time/logging (s)                             0.00167253
+time/sac training (s)                        5.31831
+time/saving (s)                              0.002985
+time/training (s)                            2.3927e-05
+time/epoch (s)                               6.07344
+time/total (s)                              92.844
+Epoch                                       10
+---------------------------------------  ---------------
+2023-02-20 14:55:01.489637 PST | [Fanuc_peg_in_hole_2023_02_20_14_53_21_0000--s-0] Epoch 11 finished
+---------------------------------------  ---------------
+epoch                                       11
+replay_buffer/size                       11200
+trainer/num train calls                  12000
+trainer/QF1 Loss                           121.426
+trainer/QF2 Loss                           122.032
+trainer/Policy Loss                        -77.2563
+trainer/Q1 Predictions Mean                 72.0553
+trainer/Q1 Predictions Std                  26.7464
+trainer/Q1 Predictions Max                 229.225
+trainer/Q1 Predictions Min                  35.8227
+trainer/Q2 Predictions Mean                 71.8415
+trainer/Q2 Predictions Std                  26.667
+trainer/Q2 Predictions Max                 231.342
+trainer/Q2 Predictions Min                  35.7731
+trainer/Q Targets Mean                      71.5707
+trainer/Q Targets Std                       29.3786
+trainer/Q Targets Max                      303.509
+trainer/Q Targets Min                       35.9679
+trainer/Log Pis Mean                        -6.55712
+trainer/Log Pis Std                          2.0922
+trainer/Log Pis Max                          0.820502
+trainer/Log Pis Min                        -12.1826
+trainer/policy/mean Mean                     0.036167
+trainer/policy/mean Std                      0.373924
+trainer/policy/mean Max                      0.866353
+trainer/policy/mean Min                     -0.911803
+trainer/policy/normal/std Mean               0.850057
+trainer/policy/normal/std Std                0.0543542
+trainer/policy/normal/std Max                0.964886
+trainer/policy/normal/std Min                0.600024
+trainer/policy/normal/log_std Mean          -0.164705
+trainer/policy/normal/log_std Std            0.0688271
+trainer/policy/normal/log_std Max           -0.0357454
+trainer/policy/normal/log_std Min           -0.510786
+trainer/Alpha                                0.579142
+trainer/Alpha Loss                         -10.136
+expl/num steps total                     11200
+expl/num paths total                       448
+expl/path length Mean                       25
+expl/path length Std                         0
+expl/path length Max                        25
+expl/path length Min                        25
+expl/Rewards Mean                            1.2973
+expl/Rewards Std                             1.40223
+expl/Rewards Max                             4.19934
+expl/Rewards Min                             0.00135781
+expl/Returns Mean                           32.4325
+expl/Returns Std                            27.0288
+expl/Returns Max                            74.6645
+expl/Returns Min                             8.06601
+expl/Actions Mean                            0.0325777
+expl/Actions Std                             0.622153
+expl/Actions Max                             0.992409
+expl/Actions Min                            -0.998576
+expl/Num Paths                               4
+expl/Average Returns                        32.4325
+expl/env_infos/final/reward_dist Mean        1.63452
+expl/env_infos/final/reward_dist Std         1.57144
+expl/env_infos/final/reward_dist Max         3.61817
+expl/env_infos/final/reward_dist Min         0.00202637
+expl/env_infos/initial/reward_dist Mean      0.347271
+expl/env_infos/initial/reward_dist Std       0.0544998
+expl/env_infos/initial/reward_dist Max       0.422347
+expl/env_infos/initial/reward_dist Min       0.294386
+expl/env_infos/reward_dist Mean              1.2973
+expl/env_infos/reward_dist Std               1.40223
+expl/env_infos/reward_dist Max               4.19934
+expl/env_infos/reward_dist Min               0.00135781
+eval/num steps total                      6000
+eval/num paths total                       240
+eval/path length Mean                       25
+eval/path length Std                         0
+eval/path length Max                        25
+eval/path length Min                        25
+eval/Rewards Mean                            0.15849
+eval/Rewards Std                             0.344216
+eval/Rewards Max                             1.41569
+eval/Rewards Min                             0.000120552
+eval/Returns Mean                            3.96225
+eval/Returns Std                             0.329877
+eval/Returns Max                             4.38822
+eval/Returns Min                             3.57124
+eval/Actions Mean                            0.0802503
+eval/Actions Std                             0.44105
+eval/Actions Max                             0.861609
+eval/Actions Min                            -0.918334
+eval/Num Paths                              20
+eval/Average Returns                         3.96225
+eval/env_infos/final/reward_dist Mean        0.00953352
+eval/env_infos/final/reward_dist Std         0.00594084
+eval/env_infos/final/reward_dist Max         0.0155084
+eval/env_infos/final/reward_dist Min         0.00113582
+eval/env_infos/initial/reward_dist Mean      0.38402
+eval/env_infos/initial/reward_dist Std       0.0725331
+eval/env_infos/initial/reward_dist Max       0.437822
+eval/env_infos/initial/reward_dist Min       0.273178
+eval/env_infos/reward_dist Mean              0.15849
+eval/env_infos/reward_dist Std               0.344216
+eval/env_infos/reward_dist Max               1.41569
+eval/env_infos/reward_dist Min               0.000120552
+time/data storing (s)                        0.000339399
+time/evaluation sampling (s)                 0.95197
+time/exploration sampling (s)                0.179573
+time/logging (s)                             0.00169744
+time/sac training (s)                        5.2756
+time/saving (s)                              0.00295108
+time/training (s)                            2.3902e-05
+time/epoch (s)                               6.41215
+time/total (s)                              99.507
+Epoch                                       11
+---------------------------------------  ---------------

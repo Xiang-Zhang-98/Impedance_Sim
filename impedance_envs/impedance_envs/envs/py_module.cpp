@@ -547,7 +547,7 @@ void init(void)
     mj_activate(license_path); // Check MuJoCo activation license
 
     char error[1000];
-    m = mj_loadXML("source/LRMate_200iD.xml", 0, error, 1000); // MuJoCo model
+    m = mj_loadXML("./impedance_envs/impedance_envs/envs/source/LRMate_200iD.xml", 0, error, 1000); // MuJoCo model
     d = mj_makeData(m);                                        // MuJoCo data
 
     if (Render){
