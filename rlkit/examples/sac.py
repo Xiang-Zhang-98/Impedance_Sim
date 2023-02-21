@@ -16,8 +16,8 @@ from rlkit.torch.torch_rl_algorithm import TorchBatchRLAlgorithm
 def experiment(variant):
     # expl_env = NormalizedBoxEnv(HalfCheetahEnv())
     # eval_env = NormalizedBoxEnv(HalfCheetahEnv())
-    expl_env = gym.make('Fanuc_peg_in_hole-v0')
-    eval_env = gym.make('Fanuc_peg_in_hole-v0')
+    expl_env = gym.make('Fanuc_peg_in_hole-v0',render=False)
+    eval_env = gym.make('Fanuc_peg_in_hole-v0',render=False)
     obs_dim = eval_env.observation_space.low.size
     action_dim = eval_env.action_space.low.size
 
