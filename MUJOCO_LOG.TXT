@@ -1,0 +1,3 @@
+Wed Feb 22 17:07:47 2023
+ERROR: Missing or invalid license activation
+

@@ -15,12 +15,18 @@ def simulate_policy(args):
     data = torch.load(args.file)
     policy = data['evaluation/policy']
     # env = data['evaluation/env']
-    env = gym.make('Fanuc_peg_in_hole-v0')
+    env = gym.make('Fanuc_peg_in_hole-v0',render=True)
     print("Policy loaded")
     if args.gpu:
         set_gpu_mode(True)
         policy.cuda()
     while True:
+        if args.reload:
+            policy = data['evaluation/policy']
+            print("Policy loaded")
+            if args.gpu:
+                set_gpu_mode(True)
+                policy.cuda()
         path = rollout(
             env,
             policy,
@@ -38,6 +44,7 @@ if __name__ == "__main__":
     parser.add_argument('--H', type=int, default=300,
                         help='Max length of rollout')
     parser.add_argument('--gpu', action='store_true')
+    parser.add_argument('--reload', action='store_true')
     args = parser.parse_args()
 
     simulate_policy(args)

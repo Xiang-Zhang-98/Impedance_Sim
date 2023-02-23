@@ -96,9 +96,9 @@ class Fanuc_peg_in_hole(gym.Env):
         self.ori_noise_level = 0.0
         self.use_noisy_state = True
         self.state_offset = np.zeros(18)
-        self.force_noise = True
+        self.force_noise = False
         self.force_noise_level = 0.2
-        self.force_limit = 2
+        self.force_limit = 10 #2
         self.evaluation = self.Render
         self.moving_pos_threshold = 2.5
         self.moving_ori_threshold = 4
@@ -125,13 +125,16 @@ class Fanuc_peg_in_hole(gym.Env):
 
     def reset(self):
         init_c_pose = np.array([0.5, 0.0, 0.40, 0.0, np.pi, np.pi])
+        l = np.array([3,3,0.5])/100
+        cube = np.random.uniform(low=-l, high=l)
+        init_c_pose[0:3] = init_c_pose[0:3] + cube
         init_j_pose = IK(init_c_pose)
         self.set_joint_states(init_j_pose, 0*init_j_pose, 0*init_j_pose)
         self.force_calibration()
         # Domain-randomization
-        self.state_offset[:2] = np.random.normal(0, np.array([self.noise_level,self.noise_level]))
-        angle = np.random.normal(0, self.ori_noise_level / 180 * np.pi)
-        self.state_offset[5] = angle
+        # self.state_offset[:2] = np.random.normal(0, np.array([self.noise_level,self.noise_level]))
+        # angle = np.random.normal(0, self.ori_noise_level / 180 * np.pi)
+        # self.state_offset[5] = angle
         return self.get_RL_obs()
 
 
@@ -166,8 +169,9 @@ class Fanuc_peg_in_hole(gym.Env):
             world_force = world_force + np.random.normal(0, self.force_noise_level, 6)
         world_force = np.clip(world_force, -10, 10)
         state = np.concatenate([100*eef_pos, eef_eul, eef_vel, world_force])
-        state = np.clip(state, -self.obs_high, self.obs_high)
-        return state + self.state_offset
+        # state = np.clip(state, -self.obs_high, self.obs_high)
+        #return state + self.state_offset
+        return state
 
     def process_action(self, action):
         desired_vel = np.clip(action[:6], -1, 1)
@@ -182,7 +186,7 @@ class Fanuc_peg_in_hole(gym.Env):
         self.adm_kp = desired_kp
         self.adm_kd = 2 * np.sqrt(np.multiply(self.adm_kp, self.adm_m))
         init_ob = self.get_RL_obs()
-        for i in range(5):
+        for i in range(50):
             ob = self.get_RL_obs()
             curr_force = ob[12:]
             if np.abs(np.dot(curr_force, desired_vel) / np.linalg.norm(desired_vel + 1e-6, ord=2)) > self.force_limit:
@@ -207,32 +211,41 @@ class Fanuc_peg_in_hole(gym.Env):
             if np.linalg.norm(ob[0:3] - self.goal) < 0.3:
                 done = False
                 desired_vel = np.zeros(6)  # if reach to goal, then stay
+                self.adm_pose_ref = self.pose_vel[:7]
+                self.adm_vel_ref = desired_vel
+                target_joint_vel = self.Cartersian_vel_control(desired_vel)
             else:
                 done = False
+                self.adm_pose_ref = self.pose_vel[:7]
+                self.adm_vel_ref = desired_vel
+                target_joint_vel = self.admittance_control()
 
-            # self.adm_kp = desired_kp
-            # self.adm_kd = np.sqrt(np.multiply(self.adm_kp, self.adm_m))
-            self.adm_pose_ref = self.pose_vel[:7]
-            # self.adm_pose_ref[:3] = self.adm_pose_ref[:3] + 0.02*self.moving_pos_threshold*desired_vel[:3]/np.linalg.norm(desired_vel[:3], ord=2)
-            # adm_eul = trans_eul.quat2euler(self.pose_vel[3:7]) + 2/ 180 * np.pi * self.moving_ori_threshold * desired_vel[3:6]/np.linalg.norm(desired_vel[3:6], ord=2)
-            # self.adm_pose_ref[3:7] = trans_eul.euler2quat(adm_eul[0], adm_eul[1], adm_eul[2], axes='sxyz')
-            self.adm_vel_ref = desired_vel
-            # Adm or vel ctl?
-            target_joint_vel = self.admittance_control()
-            # target_joint_vel = self.Cartersian_vel_control(desired_vel)
+            # # self.adm_kp = desired_kp
+            # # self.adm_kd = np.sqrt(np.multiply(self.adm_kp, self.adm_m))
+            # self.adm_pose_ref = self.pose_vel[:7]
+            # # self.adm_pose_ref[:3] = self.adm_pose_ref[:3] + 0.02*self.moving_pos_threshold*desired_vel[:3]/np.linalg.norm(desired_vel[:3], ord=2)
+            # # adm_eul = trans_eul.quat2euler(self.pose_vel[3:7]) + 2/ 180 * np.pi * self.moving_ori_threshold * desired_vel[3:6]/np.linalg.norm(desired_vel[3:6], ord=2)
+            # # self.adm_pose_ref[3:7] = trans_eul.euler2quat(adm_eul[0], adm_eul[1], adm_eul[2], axes='sxyz')
+            # self.adm_vel_ref = desired_vel
+            # # Adm or vel ctl?
+            # target_joint_vel = self.admittance_control()
+            # # target_joint_vel = self.Cartersian_vel_control(desired_vel)
+
             self.set_joint_velocity(target_joint_vel)
             self.sim_step()
 
         ob = self.get_RL_obs()
         # evalute reward
-        dist = np.linalg.norm(ob[0:3] - self.state_offset[0:3] - self.goal)
+        dist = np.linalg.norm(ob[0:3] - self.goal)
+        # print(dist)
+        # time.sleep(0.5)
         if dist < 0.3:
             done = False
-            # reward = 1000
+            reward = 1000
         else:
             done = False
-            # reward = np.power(10, 3 - dist)
-        reward = -dist
+            reward = np.power(10, 3 - dist)
+        # reward = -dist
         if self.evaluation and dist < 0.5:
             done = True
         # print(reward)

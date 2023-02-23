@@ -4,7 +4,7 @@ import gym
 
 import rlkit.torch.pytorch_util as ptu
 from rlkit.data_management.env_replay_buffer import EnvReplayBuffer
-# from rlkit.envs.wrappers import NormalizedBoxEnv
+from rlkit.envs.wrappers import NormalizedBoxEnv
 from rlkit.launchers.launcher_util import setup_logger
 from rlkit.samplers.data_collector import MdpPathCollector
 from rlkit.torch.sac.policies import TanhGaussianPolicy, MakeDeterministic
@@ -18,6 +18,8 @@ def experiment(variant):
     # eval_env = NormalizedBoxEnv(HalfCheetahEnv())
     expl_env = gym.make('Fanuc_peg_in_hole-v0',render=False)
     eval_env = gym.make('Fanuc_peg_in_hole-v0',render=False)
+    expl_env = NormalizedBoxEnv(expl_env)
+    eval_env = NormalizedBoxEnv(eval_env)
     obs_dim = eval_env.observation_space.low.size
     action_dim = eval_env.action_space.low.size
 
@@ -91,27 +93,27 @@ if __name__ == "__main__":
     variant = dict(
         algorithm="SAC",
         version="normal",
-        layer_size=512,
+        layer_size=128,
         replay_buffer_size=int(1E6),
         algorithm_kwargs=dict(
             num_epochs=1000,
-            num_eval_steps_per_epoch=500,
+            num_eval_steps_per_epoch=100,
             num_trains_per_train_loop=1000,
-            num_expl_steps_per_train_loop=100,
+            num_expl_steps_per_train_loop=500,
             min_num_steps_before_training=10000,
-            max_path_length=25,
-            batch_size=1024,
+            max_path_length=20,
+            batch_size=4096,
         ),
         trainer_kwargs=dict(
-            discount=0.9,
+            discount=0.95,
             soft_target_tau=5e-3,
             target_update_period=1,
-            policy_lr=1E-4,
-            qf_lr=5E-3,
+            policy_lr=1E-3,
+            qf_lr=1E-4,
             reward_scale=1,
-            use_automatic_entropy_tuning=False,
+            use_automatic_entropy_tuning=True,
         ),
     )
-    setup_logger('Fanuc_peg_in_hole', variant=variant)
+    setup_logger('Fanuc_peg_in_hole_random_peg_pos', variant=variant)
     ptu.set_gpu_mode(True)  # optionally set the GPU (default=False)
     experiment(variant)
