@@ -92,8 +92,8 @@ class Fanuc_peg_in_hole(gym.Env):
             # np.array([[0,0,1], [0,1,0], [-1,0,0]])
         self.goal = np.array([0, 0, 1])
         self.goal_ori = np.array([0, 0, 0])
-        self.noise_level = 0.0
-        self.ori_noise_level = 0.0
+        self.noise_level = 0.2
+        self.ori_noise_level = 0.5
         self.use_noisy_state = True
         self.state_offset = np.zeros(18)
         self.force_noise = False
@@ -132,9 +132,9 @@ class Fanuc_peg_in_hole(gym.Env):
         self.set_joint_states(init_j_pose, 0*init_j_pose, 0*init_j_pose)
         self.force_calibration()
         # Domain-randomization
-        # self.state_offset[:2] = np.random.normal(0, np.array([self.noise_level,self.noise_level]))
-        # angle = np.random.normal(0, self.ori_noise_level / 180 * np.pi)
-        # self.state_offset[5] = angle
+        self.state_offset[:2] = np.random.normal(0, np.array([self.noise_level,self.noise_level]))
+        angle = np.random.normal(0, self.ori_noise_level / 180 * np.pi)
+        self.state_offset[5] = angle
         return self.get_RL_obs()
 
 
@@ -170,8 +170,10 @@ class Fanuc_peg_in_hole(gym.Env):
         world_force = np.clip(world_force, -10, 10)
         state = np.concatenate([100*eef_pos, eef_eul, eef_vel, world_force])
         # state = np.clip(state, -self.obs_high, self.obs_high)
-        #return state + self.state_offset
-        return state
+        if self.use_noisy_state:
+            return state + self.state_offset
+        else:
+            return state
 
     def process_action(self, action):
         desired_vel = np.clip(action[:6], -1, 1)
