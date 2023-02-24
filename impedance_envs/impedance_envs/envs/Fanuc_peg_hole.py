@@ -70,7 +70,7 @@ class Fanuc_peg_in_hole(gym.Env):
 
         # initialize admittance gains
         self.adm_kp = 10 * np.array([1, 1, 1, 1, 1, 1])
-        self.adm_m = 1 * np.array([1, 1, 1, 1, 1, 1])
+        self.adm_m = 1 * np.array([1, 1, 1, 0.1, 0.1, 0.1])
         self.adm_kd = 2 * np.sqrt(np.multiply(self.adm_kp, self.adm_m))
         self.adm_pose_ref = np.zeros(7)
         self.adm_vel_ref = np.zeros(6)
@@ -113,8 +113,8 @@ class Fanuc_peg_in_hole(gym.Env):
         self.action_space = spaces.Box(low=-np.ones(12), high=np.ones(12), dtype=np.float32)
         self.action_vel_high = 0.1 * np.ones(6)
         self.action_vel_low = -0.1 * np.ones(6)
-        self.action_kp_high = 20 * np.ones(6)
-        self.action_kp_low = 1 * np.ones(6)
+        self.action_kp_high = 20 * np.array([1,1,1,10,10,10])
+        self.action_kp_low = 1 * np.array([1,1,1,10,10,10])
 
         # initialize the simulation
         self.n_step = 0
@@ -189,6 +189,7 @@ class Fanuc_peg_in_hole(gym.Env):
         for i in range(50):
             ob = self.get_RL_obs()
             curr_force = ob[12:]
+            off_work_space = False
             if np.abs(np.dot(curr_force, desired_vel) / np.linalg.norm(desired_vel + 1e-6, ord=2)) > self.force_limit:
                 break
             delta_ob = ob - init_ob
@@ -197,20 +198,31 @@ class Fanuc_peg_in_hole(gym.Env):
                 break
             if np.abs(ob[0]) > self.work_space_xy_limit:
                 desired_vel[0] = -self.action_vel_high[0] * np.sign(ob[0])
+                off_work_space = True
             if np.abs(ob[1]) > self.work_space_xy_limit:
                 desired_vel[1] = -self.action_vel_high[1] * np.sign(ob[1])
+                off_work_space = True
             if np.abs(ob[3]) > self.work_space_rollpitch_limit:
                 desired_vel[3] = -self.action_vel_high[3] * np.sign(ob[3])
+                off_work_space = True
             if np.abs(ob[4]) > self.work_space_rollpitch_limit:
                 desired_vel[4] = -self.action_vel_high[4] * np.sign(ob[4])
+                off_work_space = True
             if np.abs(ob[5]) > self.work_space_yaw_limit:
                 desired_vel[5] = -self.action_vel_high[5] * np.sign(ob[5])
+                off_work_space = True
             if ob[2] > self.work_space_z_limit:
                 desired_vel[2] = -self.action_vel_high[2]
+                off_work_space = True
             # check done
             if np.linalg.norm(ob[0:3] - self.goal) < 0.3:
                 done = False
                 desired_vel = np.zeros(6)  # if reach to goal, then stay
+                self.adm_pose_ref = self.pose_vel[:7]
+                self.adm_vel_ref = desired_vel
+                target_joint_vel = self.Cartersian_vel_control(desired_vel)
+            elif off_work_space:
+                done = False
                 self.adm_pose_ref = self.pose_vel[:7]
                 self.adm_vel_ref = desired_vel
                 target_joint_vel = self.Cartersian_vel_control(desired_vel)
@@ -241,10 +253,10 @@ class Fanuc_peg_in_hole(gym.Env):
         # time.sleep(0.5)
         if dist < 0.3:
             done = False
-            reward = 1000
+            reward = 10
         else:
             done = False
-            reward = np.power(10, 3 - dist)
+            reward = np.power(10, 1 - dist)
         # reward = -dist
         if self.evaluation and dist < 0.5:
             done = True
@@ -409,9 +421,10 @@ class Fanuc_peg_in_hole(gym.Env):
 
         # process force
         world_force = np.zeros(6)
+        force_limit = np.array([10,10,10,1,1,1])
         eef_force = self.force_sensor_data - self.force_offset
         world_force[:3] = eef_rotm @ eef_force
-        world_force = np.clip(world_force, -10, 10)
+        world_force = np.clip(world_force, -force_limit, force_limit)
 
         # dynamics
         e = np.zeros(6)
@@ -446,7 +459,7 @@ if __name__ == "__main__":
     sim = Fanuc_peg_in_hole()
     for _ in range(10):
         sim.reset()
-        for i in range(10):
+        for i in range(20):
             action = np.random.uniform(low=-1, high=1, size=12)
             # action = np.ones(12)
             # action[0:6] = np.zeros(6)
