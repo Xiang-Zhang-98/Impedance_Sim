@@ -12,6 +12,7 @@ import transforms3d.euler as trans_eul
 import gym
 from gym import spaces
 
+
 # To debug in VS Code, add the following line to launch.json under "configurations"
 # "env": {"LD_LIBRARY_PATH": "/home/{USER_NAME}/.mujoco/mujoco200/bin/"}
 
@@ -35,7 +36,7 @@ class Fanuc_peg_in_hole(gym.Env):
 
         self.time_render = np.zeros(1)
         self.gripper_close = False
-        self.nv = 8 # subject to change according to different tasks
+        self.nv = 8  # subject to change according to different tasks
 
         # build a c type array to hold the return value
         self.joint_pos_holder = (ctypes.c_double * 8)(
@@ -85,11 +86,11 @@ class Fanuc_peg_in_hole(gym.Env):
         self.work_space_z_limit = 4
         self.work_space_rollpitch_limit = np.pi * 5 / 180.0
         self.work_space_yaw_limit = np.pi * 10 / 180.0
-        self.work_space_origin = np.array([0.49, -0.0169, 0.1-0.054])
+        self.work_space_origin = np.array([0.49, -0.0169, 0.1 - 0.054])
         self.work_space_origin_rotm = np.array([[0.0423, -0.2853, 0.9575],
                                                 [-0.2853, 0.9150, 0.2853],
                                                 [-0.9575, -0.2853, -0.0427]])
-            # np.array([[0,0,1], [0,1,0], [-1,0,0]])
+        # np.array([[0,0,1], [0,1,0], [-1,0,0]])
         self.goal = np.array([0, 0, 1])
         self.goal_ori = np.array([0, 0, 0])
         self.noise_level = 0.2
@@ -98,23 +99,23 @@ class Fanuc_peg_in_hole(gym.Env):
         self.state_offset = np.zeros(18)
         self.force_noise = False
         self.force_noise_level = 0.2
-        self.force_limit = 10 #2
+        self.force_limit = 10  # 2
         self.evaluation = self.Render
         self.moving_pos_threshold = 2.5
         self.moving_ori_threshold = 4
 
         # RL setting
-        self.obs_high = [self.work_space_xy_limit,self.work_space_xy_limit,self.work_space_z_limit,
-                         self.work_space_rollpitch_limit,self.work_space_rollpitch_limit,self.work_space_yaw_limit,
-                         0.1,0.1,0.1,0.1,0.1,0.1,
-                         10,10,10,10,10,10]
+        self.obs_high = [self.work_space_xy_limit, self.work_space_xy_limit, self.work_space_z_limit,
+                         self.work_space_rollpitch_limit, self.work_space_rollpitch_limit, self.work_space_yaw_limit,
+                         0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
+                         10, 10, 10, 10, 10, 10]
         self.obs_high = np.array(self.obs_high)
         self.observation_space = spaces.Box(low=-1., high=1., shape=self.get_RL_obs().shape, dtype=np.float32)
         self.action_space = spaces.Box(low=-np.ones(12), high=np.ones(12), dtype=np.float32)
         self.action_vel_high = 0.1 * np.ones(6)
         self.action_vel_low = -0.1 * np.ones(6)
-        self.action_kp_high = 20 * np.array([1,1,1,10,10,10])
-        self.action_kp_low = 1 * np.array([1,1,1,10,10,10])
+        self.action_kp_high = 20 * np.array([1, 1, 1, 10, 10, 10])
+        self.action_kp_low = 1 * np.array([1, 1, 1, 10, 10, 10])
 
         # initialize the simulation
         self.n_step = 0
@@ -123,28 +124,25 @@ class Fanuc_peg_in_hole(gym.Env):
         self.reset()
         self.set_seed()
 
-
     def reset(self):
         # set eef init pose
         init_c_pose = np.array([0.5, 0.0, 0.40, 0.0, np.pi, np.pi])
-        l = np.array([3,3,0.5])/100
+        l = np.array([3, 3, 0.5]) / 100
         cube = np.random.uniform(low=-l, high=l)
         init_c_pose[0:3] = init_c_pose[0:3] + cube
         init_j_pose = IK(init_c_pose)
-        self.set_joint_states(init_j_pose, 0*init_j_pose, 0*init_j_pose)
+        self.set_joint_states(init_j_pose, 0 * init_j_pose, 0 * init_j_pose)
         self.force_calibration()
         # Domain-randomization
-        self.state_offset[:2] = np.random.normal(0, np.array([self.noise_level,self.noise_level]))
+        self.state_offset[:2] = np.random.normal(0, np.array([self.noise_level, self.noise_level]))
         angle = np.random.normal(0, self.ori_noise_level / 180 * np.pi)
         self.state_offset[5] = angle
         return self.get_RL_obs()
-
 
     def set_seed(self, seed=0):
         np.random.seed(seed)
         import random
         random.seed(seed)
-
 
     def sim_step(self):
         self.sim.wrapper_step()
@@ -156,7 +154,7 @@ class Fanuc_peg_in_hole(gym.Env):
     def get_RL_obs(self):
         eef_pos, eef_world_rotm, eef_vel = self.get_eef_pose_vel(self.pose_vel)
         eef_pos = eef_pos - self.work_space_origin
-        eef_rotm = np.linalg.inv(self.work_space_origin_rotm)@eef_world_rotm
+        eef_rotm = np.linalg.inv(self.work_space_origin_rotm) @ eef_world_rotm
         eef_eul = trans_eul.mat2euler(eef_rotm)
         world_force = np.zeros(6)
         eef_force = self.force_sensor_data - self.force_offset
@@ -164,7 +162,7 @@ class Fanuc_peg_in_hole(gym.Env):
         if self.force_noise:
             world_force = world_force + np.random.normal(0, self.force_noise_level, 6)
         world_force = np.clip(world_force, -10, 10)
-        state = np.concatenate([100*eef_pos, eef_eul, eef_vel, world_force])
+        state = np.concatenate([100 * eef_pos, eef_eul, eef_vel, world_force])
         # state = np.clip(state, -self.obs_high, self.obs_high)
         if self.use_noisy_state:
             return state + self.state_offset
@@ -175,8 +173,10 @@ class Fanuc_peg_in_hole(gym.Env):
         # Normalize actions
         desired_vel = np.clip(action[:6], -1, 1)
         desired_kp = np.clip(action[6:12], -1, 1)
-        desired_vel = (self.action_vel_high + self.action_vel_low)/2 + np.multiply(desired_vel, (self.action_vel_high - self.action_vel_low)/2)
-        desired_kp = (self.action_kp_high + self.action_kp_low)/2 + np.multiply(desired_kp, (self.action_kp_high - self.action_kp_low)/2)
+        desired_vel = (self.action_vel_high + self.action_vel_low) / 2 + np.multiply(desired_vel, (
+                    self.action_vel_high - self.action_vel_low) / 2)
+        desired_kp = (self.action_kp_high + self.action_kp_low) / 2 + np.multiply(desired_kp, (
+                    self.action_kp_high - self.action_kp_low) / 2)
         return desired_vel, desired_kp
 
     def step(self, action):
@@ -192,7 +192,7 @@ class Fanuc_peg_in_hole(gym.Env):
             if np.abs(np.dot(curr_force, desired_vel) / np.linalg.norm(desired_vel + 1e-6, ord=2)) > self.force_limit:
                 break
             delta_ob = ob - init_ob
-            if np.linalg.norm(delta_ob[0:3], ord=2) > self.moving_pos_threshold or np.linalg.norm(delta_ob[3:6], ord=2)\
+            if np.linalg.norm(delta_ob[0:3], ord=2) > self.moving_pos_threshold or np.linalg.norm(delta_ob[3:6], ord=2) \
                     > self.moving_ori_threshold / 180 * np.pi:
                 break
             if np.abs(ob[0]) > self.work_space_xy_limit:
@@ -388,7 +388,7 @@ class Fanuc_peg_in_hole(gym.Env):
         target_joint_vel = np.linalg.pinv(Jacobian) @ vel
         return target_joint_vel
 
-    def skew_symmetric(self,vec):
+    def skew_symmetric(self, vec):
         return np.array([[0, -vec[2], vec[1]],
                          [vec[2], 0, -vec[0]],
                          [-vec[1], vec[0], 0]])
@@ -415,7 +415,6 @@ class Fanuc_peg_in_hole(gym.Env):
 
         return link6_pos, link6_rotm, link6_vel
 
-
     def admittance_control(self, ctl_ori=True):
         ## Get robot motion from desired dynamics
         eef_pos, eef_rotm, eef_vel = self.get_eef_pose_vel(self.pose_vel)
@@ -424,7 +423,7 @@ class Fanuc_peg_in_hole(gym.Env):
 
         # process force
         world_force = np.zeros(6)
-        force_limit = np.array([10,10,10,1,1,1])
+        force_limit = np.array([10, 10, 10, 1, 1, 1])
         eef_force = self.force_sensor_data - self.force_offset
         world_force[:3] = eef_rotm @ eef_force
         world_force = np.clip(world_force, -force_limit, force_limit)
@@ -443,7 +442,7 @@ class Fanuc_peg_in_hole(gym.Env):
         MA = world_force + np.multiply(self.adm_kp, e) + np.multiply(self.adm_kd, e_dot)
         adm_acc = np.divide(MA, self.adm_m)
         T = 1 / self.HZ
-        adm_vel = eef_vel + adm_acc * T # This vel is for eef not link6, which we can control
+        adm_vel = eef_vel + adm_acc * T  # This vel is for eef not link6, which we can control
         if not ctl_ori:
             adm_vel[3:] = 0 * adm_vel[3:]
         link6_pos, link6_rotm, link6_vel = self.get_link6_pose_vel_from_eef(eef_pos, eef_rotm, adm_vel)
@@ -457,7 +456,6 @@ class Fanuc_peg_in_hole(gym.Env):
         return target_joint_vel
 
 
-
 if __name__ == "__main__":
     sim = Fanuc_peg_in_hole()
     for _ in range(10):
@@ -468,4 +466,4 @@ if __name__ == "__main__":
             # action[0:6] = np.zeros(6)
             # action[2] = -1
             sim.step(action)
-    
+
