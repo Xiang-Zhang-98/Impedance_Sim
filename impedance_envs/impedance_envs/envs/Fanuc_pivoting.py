@@ -17,26 +17,27 @@ from gym import spaces
 # "env": {"LD_LIBRARY_PATH": "/home/{USER_NAME}/.mujoco/mujoco200/bin/"}
 
 
-class Fanuc_peg_in_hole(gym.Env):
+class Fanuc_pivoting(gym.Env):
     def __init__(self, render=True):
-        super(Fanuc_peg_in_hole, self).__init__()
+        super(Fanuc_pivoting, self).__init__()
 
         cwd = os.getcwd()
 
-        self.sim = ctypes.cdll.LoadLibrary(cwd + "/impedance_envs/impedance_envs/envs/bin/mujocosim.so")
+        self.sim = ctypes.cdll.LoadLibrary(cwd + "/impedance_envs/impedance_envs/envs/bin/mujocosim_pivoting.so")
 
         # parameters which will be updated every step
         self.joint_pos = np.zeros(6)
         self.joint_vel = np.zeros(6)
         self.joint_acc = np.zeros(6)
         self.pose_vel = np.zeros(13)
+        self.obj_pose = np.zeros(12) # 3d pos + 9d rotm
         self.full_jacobian = np.zeros((6, 8))
         self.force_sensor_data = np.zeros(3)
         self.force_offset = np.zeros(3)
 
         self.time_render = np.zeros(1)
         self.gripper_close = False
-        self.nv = 8  # subject to change according to different tasks
+        self.nv = 8 + 6  # subject to change according to different tasks
 
         # build a c type array to hold the return value
         self.joint_pos_holder = (ctypes.c_double * 8)(
@@ -60,6 +61,9 @@ class Fanuc_peg_in_hole(gym.Env):
         )
         self.pose_vel_holder = (ctypes.c_double * 13)(
             0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+        )
+        self.obj_pose_holder = (ctypes.c_double * 12)(
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
         )
 
         # initialize a PD gain, may need more effort on tunning
@@ -126,7 +130,7 @@ class Fanuc_peg_in_hole(gym.Env):
 
     def reset(self):
         # set eef init pose
-        init_c_pose = np.array([0.5, 0.0, 0.40, 0.0, np.pi, np.pi])
+        init_c_pose = np.array([0.65, 0.0, 0.27, 0.0, np.pi, np.pi])
         l = np.array([3, 3, 0.5]) / 100
         cube = np.random.uniform(low=-l, high=l)
         init_c_pose[0:3] = init_c_pose[0:3] + cube
@@ -150,6 +154,10 @@ class Fanuc_peg_in_hole(gym.Env):
         self.get_pose_vel()
         self.get_sensor_data()
         self.get_jacobian()
+
+    def get_obj_pos(self):
+        obs_pos = 
+        return 
 
     def get_RL_obs(self):
         eef_pos, eef_world_rotm, eef_vel = self.get_eef_pose_vel(self.pose_vel)
@@ -281,6 +289,8 @@ class Fanuc_peg_in_hole(gym.Env):
     def get_pose_vel(self):
         self.sim.get_eef_pose_vel(self.pose_vel_holder)
         self.pose_vel = np.array(self.pose_vel_holder[:13])
+        self.sim.get_obj_pose(self.obj_pose_holder)
+        self.obj_pose = np.array(self.obj_pose_holder[:12])
 
     def get_jacobian(self):
         self.sim.wrapper_eef_full_jacobian(self.jacobian_holder)
@@ -457,7 +467,7 @@ class Fanuc_peg_in_hole(gym.Env):
 
 
 if __name__ == "__main__":
-    sim = Fanuc_peg_in_hole()
+    sim = Fanuc_pivoting()
     for _ in range(10):
         sim.reset()
         for i in range(20):
