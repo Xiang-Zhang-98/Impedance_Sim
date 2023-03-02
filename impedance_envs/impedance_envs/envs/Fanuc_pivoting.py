@@ -96,7 +96,10 @@ class Fanuc_pivoting(gym.Env):
                                                 [-0.9575, -0.2853, -0.0427]])
         # np.array([[0,0,1], [0,1,0], [-1,0,0]])
         self.goal = np.array([0, 0, 1])
-        self.goal_ori = np.array([0, 0, 0])
+        self.goal_ori = np.array([[0, 0, 1],
+                                  [0, 1, 0],
+                                  [-1, 0, 0]])
+        self.goal_threshold = 5.0 / 180 * np.pi
         self.noise_level = 0.2
         self.ori_noise_level = 0.5
         self.use_noisy_state = True
@@ -135,12 +138,15 @@ class Fanuc_pivoting(gym.Env):
         cube = np.random.uniform(low=-l, high=l)
         init_c_pose[0:3] = init_c_pose[0:3] + cube
         init_j_pose = IK(init_c_pose)
-        self.set_joint_states(init_j_pose, 0 * init_j_pose, 0 * init_j_pose)
+        obj_pos = np.array([0.0, 0.0, 0.0])
+        obj_rotm = np.eye(3)
+        obj_quat = trans_quat.mat2quat(obj_rotm)
+        obj_pose = np.concatenate([obj_pos, obj_quat])
+        obj_vel = np.zeros(6)
+        obj_acc = np.zeros(6)
+        self.set_joint_states(init_j_pose, 0 * init_j_pose, 0 * init_j_pose, obj_pose, obj_vel, obj_acc)
         self.force_calibration()
         # Domain-randomization
-        self.state_offset[:2] = np.random.normal(0, np.array([self.noise_level, self.noise_level]))
-        angle = np.random.normal(0, self.ori_noise_level / 180 * np.pi)
-        self.state_offset[5] = angle
         return self.get_RL_obs()
 
     def set_seed(self, seed=0):
@@ -155,9 +161,12 @@ class Fanuc_pivoting(gym.Env):
         self.get_sensor_data()
         self.get_jacobian()
 
-    def get_obj_pos(self):
-        obs_pos = 
-        return 
+    def get_obj_pose(self):
+        obj_pos = self.obj_pose[:3]
+        obj_rotm = self.obj_pose[3:].reshape([3,3])
+        obj_eul = trans_eul.mat2euler(obj_rotm)
+        obj_quat = trans_quat.mat2quat(obj_rotm)
+        return obj_pos, obj_rotm, obj_eul, obj_quat
 
     def get_RL_obs(self):
         eef_pos, eef_world_rotm, eef_vel = self.get_eef_pose_vel(self.pose_vel)
@@ -170,12 +179,14 @@ class Fanuc_pivoting(gym.Env):
         if self.force_noise:
             world_force = world_force + np.random.normal(0, self.force_noise_level, 6)
         world_force = np.clip(world_force, -10, 10)
-        state = np.concatenate([100 * eef_pos, eef_eul, eef_vel, world_force])
+        obj_pos, obj_rotm, obj_eul, obj_quat = self.get_obj_pose()
+        obj_pos = obj_pos - self.work_space_origin
+        # obj_rotm = np.linalg.inv(self.work_space_origin_rotm) @ obj_rotm
+        obj_eul = trans_eul.mat2euler(obj_rotm)
+        state = np.concatenate([100 * eef_pos, eef_eul, 100 * obj_pos, obj_eul, world_force])
         # state = np.clip(state, -self.obs_high, self.obs_high)
-        if self.use_noisy_state:
-            return state + self.state_offset
-        else:
-            return state
+        
+        return state
 
     def process_action(self, action):
         # Normalize actions
@@ -186,6 +197,12 @@ class Fanuc_pivoting(gym.Env):
         desired_kp = (self.action_kp_high + self.action_kp_low) / 2 + np.multiply(desired_kp, (
                     self.action_kp_high - self.action_kp_low) / 2)
         return desired_vel, desired_kp
+
+    def check_ori_dist_2_goal(self, eul):
+        # rotm = trans_quat.quat2mat(quat)
+        rotm = trans_eul.euler2mat(eul[0], eul[1], eul[2], axes='sxyz')
+        R = rotm.T @ self.goal_ori
+        return np.arccos((np.trace(R)-1)/2.0)
 
     def step(self, action):
         # step function for RL
@@ -203,41 +220,15 @@ class Fanuc_pivoting(gym.Env):
             if np.linalg.norm(delta_ob[0:3], ord=2) > self.moving_pos_threshold or np.linalg.norm(delta_ob[3:6], ord=2) \
                     > self.moving_ori_threshold / 180 * np.pi:
                 break
-            if np.abs(ob[0]) > self.work_space_xy_limit:
-                desired_vel[0] = -self.action_vel_high[0] * np.sign(ob[0])
-                off_work_space = True
-            if np.abs(ob[1]) > self.work_space_xy_limit:
-                desired_vel[1] = -self.action_vel_high[1] * np.sign(ob[1])
-                off_work_space = True
-            if np.abs(ob[3]) > self.work_space_rollpitch_limit:
-                desired_vel[3] = -self.action_vel_high[3] * np.sign(ob[3])
-                off_work_space = True
-            if np.abs(ob[4]) > self.work_space_rollpitch_limit:
-                desired_vel[4] = -self.action_vel_high[4] * np.sign(ob[4])
-                off_work_space = True
-            if np.abs(ob[5]) > self.work_space_yaw_limit:
-                desired_vel[5] = -self.action_vel_high[5] * np.sign(ob[5])
-                off_work_space = True
-            if ob[2] > self.work_space_z_limit:
-                desired_vel[2] = -self.action_vel_high[2]
-                off_work_space = True
             # check done
-            if np.linalg.norm(ob[0:3] - self.goal) < 0.3:
+            if self.check_ori_dist_2_goal(ob[9:12]) < self.goal_threshold:
+                desired_vel = np.zeros(6)
                 done = False
-                desired_vel = np.zeros(6)  # if reach to goal, then stay
-                self.adm_pose_ref = self.pose_vel[:7]
-                self.adm_vel_ref = desired_vel
-                target_joint_vel = self.Cartersian_vel_control(desired_vel)
-            elif off_work_space:
-                done = False
-                self.adm_pose_ref = self.pose_vel[:7]
-                self.adm_vel_ref = desired_vel
-                target_joint_vel = self.Cartersian_vel_control(desired_vel)
             else:
                 done = False
-                self.adm_pose_ref = self.pose_vel[:7]
-                self.adm_vel_ref = desired_vel
-                target_joint_vel = self.admittance_control()
+            self.adm_pose_ref = self.pose_vel[:7]
+            self.adm_vel_ref = desired_vel
+            target_joint_vel = self.admittance_control()
 
             # # self.adm_kp = desired_kp
             # # self.adm_kd = np.sqrt(np.multiply(self.adm_kp, self.adm_m))
@@ -255,17 +246,10 @@ class Fanuc_pivoting(gym.Env):
 
         ob = self.get_RL_obs()
         # evalute reward
-        dist = np.linalg.norm(ob[0:3] - self.goal)
+        dist = self.check_ori_dist_2_goal(ob[9:12])
         # print(dist)
-        # time.sleep(0.5)
-        if dist < 0.3:
-            done = False
-            reward = 10
-        else:
-            done = False
-            reward = np.power(10, 1 - dist)
-        # reward = -dist
-        if self.evaluation and dist < 0.5:
+        reward = np.pi / 2 - dist
+        if self.evaluation and dist < self.goal_threshold:
             done = True
         # print(reward)
         return ob, reward, done, dict(reward_dist=reward)
@@ -337,10 +321,13 @@ class Fanuc_pivoting(gym.Env):
         )
         self.sim.wrapper_update_reference_traj(ref_joint_mj, ref_vel_mj, ref_acc_mj)
 
-    def set_joint_states(self, joint, vel, acc):
-        joint_holder = (ctypes.c_double * 8)(joint[0], joint[1], joint[2], joint[3], joint[4], joint[5], 0.0, 0.0)
-        vel_holder = (ctypes.c_double * 8)(vel[0], vel[1], vel[2], vel[3], vel[4], vel[5], 0.0, 0.0)
-        acc_holder = (ctypes.c_double * 8)(acc[0], acc[1], acc[2], acc[3], acc[4], acc[5], 0.0, 0.0)
+    def set_joint_states(self, joint, vel, acc, obj_pos=np.zeros(7), obj_vel=np.zeros(6), obj_acc=np.zeros(6)):
+        joint_holder = (ctypes.c_double * 15)(joint[0], joint[1], joint[2], joint[3], joint[4], joint[5], 0.0, 0.0,obj_pos[0], obj_pos[1], obj_pos[2], obj_pos[3], obj_pos[4], obj_pos[5], obj_pos[6])
+        vel_holder = (ctypes.c_double * 14)(vel[0], vel[1], vel[2], vel[3], vel[4], vel[5], 0.0, 0.0,
+                                           obj_vel[0], obj_vel[1], obj_vel[2], obj_vel[3], obj_vel[4], obj_vel[5])
+        acc_holder = (ctypes.c_double * 14)(acc[0], acc[1], acc[2], acc[3], acc[4], acc[5], 0.0, 0.0,
+                                           obj_acc[0], obj_acc[1], obj_acc[2], obj_acc[3], obj_acc[4], obj_acc[5])
+        
         self.sim.wrapper_set_joint_states(joint_holder, vel_holder, acc_holder)
 
     def set_pd_gain(self, kp, kv):

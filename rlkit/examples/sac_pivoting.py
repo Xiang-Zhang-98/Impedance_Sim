@@ -16,8 +16,8 @@ from rlkit.torch.torch_rl_algorithm import TorchBatchRLAlgorithm
 def experiment(variant):
     # expl_env = NormalizedBoxEnv(HalfCheetahEnv())
     # eval_env = NormalizedBoxEnv(HalfCheetahEnv())
-    expl_env = gym.make('Fanuc_pivoting-v0',render=True)
-    eval_env = gym.make('Fanuc_pivoting-v0',render=True)
+    expl_env = gym.make('Fanuc_pivoting-v0',render=False)
+    eval_env = gym.make('Fanuc_pivoting-v0',render=False)
     expl_env = NormalizedBoxEnv(expl_env)
     eval_env = NormalizedBoxEnv(eval_env)
     obs_dim = eval_env.observation_space.low.size

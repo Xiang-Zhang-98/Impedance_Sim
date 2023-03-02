@@ -680,9 +680,9 @@ extern "C"
 
     void wrapper_set_joint_states(mjtNum *joint_pose, mjtNum *joint_vel, mjtNum *joint_acc)
     {
-        mju_copy(d->qpos, joint_pose, 8);
-        mju_copy(d->qvel, joint_vel,  8);
-        mju_copy(d->qacc, joint_acc,  8);
+        mju_copy(d->qpos, joint_pose, 8+7);
+        mju_copy(d->qvel, joint_vel,  8+6);
+        mju_copy(d->qacc, joint_acc,  8+6);
     }
 
     void wrapper_get_sensor_reading(mjtNum *Force)
