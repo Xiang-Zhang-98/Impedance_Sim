@@ -210,7 +210,7 @@ class Fanuc_pivoting(gym.Env):
         self.adm_kp = desired_kp
         self.adm_kd = 2 * np.sqrt(np.multiply(self.adm_kp, self.adm_m))
         init_ob = self.get_RL_obs()
-        for i in range(50):
+        for i in range(20):
             ob = self.get_RL_obs()
             curr_force = ob[12:]
             off_work_space = False
@@ -251,6 +251,8 @@ class Fanuc_pivoting(gym.Env):
         reward = np.pi / 2 - dist
         if self.evaluation and dist < self.goal_threshold:
             done = True
+        else:
+            done = False
         # print(reward)
         return ob, reward, done, dict(reward_dist=reward)
 

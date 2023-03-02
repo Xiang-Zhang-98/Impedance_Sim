@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mujoco model="fanuc_lrmate_jaw">
     <compiler angle="radian" meshdir="robot_mesh/" coordinate="local" settotalmass="1"/>
-    <option timestep="0.005" gravity="0 0 -10" noslip_iterations="200" iterations="40" integrator="RK4" />
+    <option timestep="0.01" gravity="0 0 -10" noslip_iterations="200" iterations="20" integrator="RK4" />
     <!-- option refer to: http://www.mujoco.org/forum/index.php?threads/default-simulation-parameters-do-not-facilitate-simple-grips.2198/ -->
     <!-- impratio="5" -->
     <size nconmax="100" njmax="500"/>
