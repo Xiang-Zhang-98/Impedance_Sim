@@ -18,8 +18,8 @@ def experiment(variant):
     # eval_env = NormalizedBoxEnv(HalfCheetahEnv())
     expl_env = gym.make('Fanuc_pivoting-v0',render=False)
     eval_env = gym.make('Fanuc_pivoting-v0',render=False)
-    # expl_env = NormalizedBoxEnv(expl_env)
-    # eval_env = NormalizedBoxEnv(eval_env)
+    expl_env = NormalizedBoxEnv(expl_env)
+    eval_env = NormalizedBoxEnv(eval_env)
     obs_dim = eval_env.observation_space.low.size
     action_dim = eval_env.action_space.low.size
 
@@ -90,6 +90,7 @@ def experiment(variant):
 
 if __name__ == "__main__":
     # noinspection PyTypeChecker
+    path_length = 40
     variant = dict(
         algorithm="SAC",
         version="normal",
@@ -97,11 +98,11 @@ if __name__ == "__main__":
         replay_buffer_size=int(1E6),
         algorithm_kwargs=dict(
             num_epochs=1000,
-            num_eval_steps_per_epoch=10*20,
+            num_eval_steps_per_epoch=10*path_length,
             num_trains_per_train_loop=1000,
-            num_expl_steps_per_train_loop=50*20,
-            min_num_steps_before_training=100*20,
-            max_path_length=20,
+            num_expl_steps_per_train_loop=50*path_length,
+            min_num_steps_before_training=100*path_length,
+            max_path_length=path_length,
             batch_size=4096,
         ),
         trainer_kwargs=dict(
