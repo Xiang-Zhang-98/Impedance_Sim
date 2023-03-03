@@ -15,7 +15,10 @@ def simulate_policy(args):
     data = torch.load(args.file)
     policy = data['evaluation/policy']
     # env = data['evaluation/env']
-    env = gym.make('Fanuc_peg_in_hole-v0',render=True)
+    if args.env == "peg":
+        env = gym.make('Fanuc_peg_in_hole-v0',render=True)
+    elif args.env == "pivoting":
+        env = gym.make('Fanuc_pivoting-v0',render=True)
     print("Policy loaded")
     if args.gpu:
         set_gpu_mode(True)
@@ -45,6 +48,7 @@ if __name__ == "__main__":
                         help='Max length of rollout')
     parser.add_argument('--gpu', action='store_true')
     parser.add_argument('--reload', action='store_true')
+    parser.add_argument('--env', type=str)
     args = parser.parse_args()
 
     simulate_policy(args)

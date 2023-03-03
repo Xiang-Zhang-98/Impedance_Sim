@@ -183,7 +183,7 @@ class Fanuc_pivoting(gym.Env):
         obj_pos = obj_pos - self.work_space_origin
         # obj_rotm = np.linalg.inv(self.work_space_origin_rotm) @ obj_rotm
         obj_eul = trans_eul.mat2euler(obj_rotm)
-        state = np.concatenate([100 * eef_pos, eef_eul, 100 * obj_pos, obj_eul, world_force])
+        state = np.concatenate([eef_pos, eef_eul, obj_pos, obj_eul, world_force])
         # state = np.clip(state, -self.obs_high, self.obs_high)
         
         return state
@@ -203,6 +203,16 @@ class Fanuc_pivoting(gym.Env):
         rotm = trans_eul.euler2mat(eul[0], eul[1], eul[2], axes='sxyz')
         R = rotm.T @ self.goal_ori
         return np.arccos((np.trace(R)-1)/2.0)
+    
+    def clear_motion(self):
+        # clear robot motion (make robot stay still)
+        desired_vel = np.zeros(6)
+        for _ in range(10):
+            self.adm_pose_ref = self.pose_vel[:7]
+            self.adm_vel_ref = desired_vel
+            target_joint_vel = self.admittance_control()
+            self.set_joint_velocity(target_joint_vel)
+            self.sim_step()
 
     def step(self, action):
         # step function for RL
@@ -216,6 +226,9 @@ class Fanuc_pivoting(gym.Env):
             off_work_space = False
             if np.abs(np.dot(curr_force, desired_vel) / np.linalg.norm(desired_vel + 1e-6, ord=2)) > self.force_limit:
                 break
+            if np.linalg.norm(curr_force) > self.force_limit:
+                self.clear_motion()
+                break
             delta_ob = ob - init_ob
             if np.linalg.norm(delta_ob[0:3], ord=2) > self.moving_pos_threshold or np.linalg.norm(delta_ob[3:6], ord=2) \
                     > self.moving_ori_threshold / 180 * np.pi:
@@ -226,6 +239,7 @@ class Fanuc_pivoting(gym.Env):
                 done = False
             else:
                 done = False
+            
             self.adm_pose_ref = self.pose_vel[:7]
             self.adm_vel_ref = desired_vel
             target_joint_vel = self.admittance_control()
@@ -249,6 +263,8 @@ class Fanuc_pivoting(gym.Env):
         dist = self.check_ori_dist_2_goal(ob[9:12])
         # print(dist)
         reward = np.pi / 2 - dist
+        if reward < 0: 
+            reward = 0
         if self.evaluation and dist < self.goal_threshold:
             done = True
         else:
@@ -414,7 +430,7 @@ class Fanuc_pivoting(gym.Env):
 
         return link6_pos, link6_rotm, link6_vel
 
-    def admittance_control(self, ctl_ori=True):
+    def admittance_control(self, ctl_ori=False):
         ## Get robot motion from desired dynamics
         eef_pos, eef_rotm, eef_vel = self.get_eef_pose_vel(self.pose_vel)
         eef_pos_d, eef_rotm_d, eef_vel_d = self.get_eef_pose_vel(np.concatenate([self.adm_pose_ref, self.adm_vel_ref]))
@@ -444,6 +460,7 @@ class Fanuc_pivoting(gym.Env):
         adm_vel = eef_vel + adm_acc * T  # This vel is for eef not link6, which we can control
         if not ctl_ori:
             adm_vel[3:] = 0 * adm_vel[3:]
+        adm_vel[1] = 0 #cancel y motions
         link6_pos, link6_rotm, link6_vel = self.get_link6_pose_vel_from_eef(eef_pos, eef_rotm, adm_vel)
         # link6_vel = adm_vel
         # adm_vel = self.pose_vel[7:] + np.array([0.2,0,0,0,0,0])#adm_acc * T

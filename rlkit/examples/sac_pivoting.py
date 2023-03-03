@@ -18,8 +18,8 @@ def experiment(variant):
     # eval_env = NormalizedBoxEnv(HalfCheetahEnv())
     expl_env = gym.make('Fanuc_pivoting-v0',render=False)
     eval_env = gym.make('Fanuc_pivoting-v0',render=False)
-    expl_env = NormalizedBoxEnv(expl_env)
-    eval_env = NormalizedBoxEnv(eval_env)
+    # expl_env = NormalizedBoxEnv(expl_env)
+    # eval_env = NormalizedBoxEnv(eval_env)
     obs_dim = eval_env.observation_space.low.size
     action_dim = eval_env.action_space.low.size
 
@@ -105,11 +105,11 @@ if __name__ == "__main__":
             batch_size=4096,
         ),
         trainer_kwargs=dict(
-            discount=0.95,
+            discount=0.9,
             soft_target_tau=5e-3,
-            target_update_period=1,
-            policy_lr=1E-3,
-            qf_lr=1E-4,
+            target_update_period=5,
+            policy_lr=1E-4,
+            qf_lr=5E-5,
             reward_scale=1,
             use_automatic_entropy_tuning=True,
         ),
