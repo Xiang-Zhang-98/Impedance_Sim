@@ -91,7 +91,7 @@ class Fanuc_pivoting(gym.Env):
         self.work_space_z_limit = 4
         self.work_space_rollpitch_limit = np.pi * 5 / 180.0
         self.work_space_yaw_limit = np.pi * 10 / 180.0
-        self.work_space_origin = np.array([0.49, -0.0169, 0.1 - 0.054])
+        self.work_space_origin = np.array([0.65, 0.0, 0.0])
         self.work_space_origin_rotm = np.array([[0.0423, -0.2853, 0.9575],
                                                 [-0.2853, 0.9150, 0.2853],
                                                 [-0.9575, -0.2853, -0.0427]])
@@ -113,17 +113,16 @@ class Fanuc_pivoting(gym.Env):
         self.moving_ori_threshold = 4
 
         # RL setting
-        self.obs_high = [self.work_space_xy_limit, self.work_space_xy_limit, self.work_space_z_limit,
-                         self.work_space_rollpitch_limit, self.work_space_rollpitch_limit, self.work_space_yaw_limit,
-                         0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
+        self.obs_high = [0.5,0.5,0.5,np.pi,np.pi,np.pi,
+                         0.5,0.5,0.5,np.pi,np.pi,np.pi,
                          10, 10, 10, 10, 10, 10]
         self.obs_high = np.array(self.obs_high)
         self.observation_space = spaces.Box(low=-1., high=1., shape=self.get_RL_obs().shape, dtype=np.float32)
-        self.action_space = spaces.Box(low=-np.ones(12), high=np.ones(12), dtype=np.float32)
-        self.action_vel_high = 0.1 * np.ones(6)
-        self.action_vel_low = -0.1 * np.ones(6)
-        self.action_kp_high = 20 * np.array([1, 1, 1, 10, 10, 10])
-        self.action_kp_low = 1 * np.array([1, 1, 1, 10, 10, 10])
+        self.action_space = spaces.Box(low=-np.ones(6), high=np.ones(6), dtype=np.float32)
+        self.action_vel_high = 0.1 * np.ones(3)
+        self.action_vel_low = -0.1 * np.ones(3)
+        self.action_kp_high = 20 * np.array([1, 1, 1])
+        self.action_kp_low = 1 * np.array([1, 1, 1])
 
         # initialize the simulation
         self.n_step = 0
@@ -135,7 +134,7 @@ class Fanuc_pivoting(gym.Env):
     def reset(self):
         # set eef init pose
         init_c_pose = np.array([0.65, 0.0, 0.27, 0.0, np.pi, np.pi])
-        l = np.array([3, 3, 0.5]) / 100
+        l = np.array([3, 0, 0.5]) / 100
         cube = np.random.uniform(low=-l, high=l)
         init_c_pose[0:3] = init_c_pose[0:3] + cube
         init_j_pose = IK(init_c_pose)
@@ -186,18 +185,20 @@ class Fanuc_pivoting(gym.Env):
         # obj_rotm = np.linalg.inv(self.work_space_origin_rotm) @ obj_rotm
         obj_eul = trans_eul.mat2euler(obj_rotm)
         state = np.concatenate([eef_pos, eef_eul, obj_pos, obj_eul, world_force])
-        # state = np.clip(state, -self.obs_high, self.obs_high)
-        
+        state = np.clip(state, -self.obs_high, self.obs_high)
+        # print(state)
         return state
 
     def process_action(self, action):
-        # Normalize actions
-        desired_vel = np.clip(action[:6], -1, 1)
-        desired_kp = np.clip(action[6:12], -1, 1)
-        desired_vel = (self.action_vel_high + self.action_vel_low) / 2 + np.multiply(desired_vel, (
+        # Normalize actions, note for simple setup we only control xyz
+        desired_vel_xyz = np.clip(action[:3], -1, 1)
+        desired_kp_xyz = np.clip(action[3:6], -1, 1)
+        desired_vel_xyz = (self.action_vel_high + self.action_vel_low) / 2 + np.multiply(desired_vel_xyz, (
                     self.action_vel_high - self.action_vel_low) / 2)
-        desired_kp = (self.action_kp_high + self.action_kp_low) / 2 + np.multiply(desired_kp, (
+        desired_kp_xyz = (self.action_kp_high + self.action_kp_low) / 2 + np.multiply(desired_kp_xyz, (
                     self.action_kp_high - self.action_kp_low) / 2)
+        desired_vel= np.concatenate([desired_vel_xyz, np.zeros(3)])
+        desired_kp = np.concatenate([desired_kp_xyz, np.array([10,10,10])])
         return desired_vel, desired_kp
 
     def check_ori_dist_2_goal(self, eul):

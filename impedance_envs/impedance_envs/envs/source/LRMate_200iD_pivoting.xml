@@ -83,8 +83,9 @@
                                         <body name="peg" pos="0.503 -0.00 0.805" euler="0 0 0">
 <!--                                        <site name="vertex1" pos="-0.0079 -0.0079 -0.005" type="sphere" size="0.0005" rgba="0.6 0.8 0.1 1"/>-->
                                             <site name="vertex1" pos="0.25 -0.00 -0.0" type="sphere" size="0.01" rgba="0.6 0.8 0.1 1"/>
-                                            <geom name="peg_pole" pos="0.25 0.0 0.0" type="cylinder" size="0.015 0.05" contype="1" euler="0 1.5707963 0" conaffinity="1" rgba="1 0 0 1"  friction="0.3"/>
-                                            <geom name="peg_geom" pos="0.3 0.0 0.0" type="mesh" mesh="peg" contype="1" euler="0 1.5707963 0" conaffinity="1" rgba="1 0 0 1"  friction="0.3"/>
+                                            <geom name="peg_pole" pos="0.25 0.0 0.0" type="cylinder" size="0.015 0.05" contype="1" euler="0 1.5707963 0" conaffinity="1" rgba="1 0 0 1"  friction="0.7"/>
+                                            <geom name="peg_tip" pos="0.3 0.0 0.0" type="cylinder" size="0.015 0.015" contype="1" euler="1.5707963 0 0" conaffinity="1" rgba="1 0 0 1"  friction="0.7"/>
+                                            <!-- <geom name="peg_geom" pos="0.3 0.0 0.0" type="mesh" mesh="peg" contype="1" euler="0 1.5707963 0" conaffinity="1" rgba="1 0 0 1"  friction="0.3"/> -->
                                         </body>
                                         <body name="palm">
                                             <geom type="mesh" mesh="palm" name="palm" pos="0.703 -0.07 0.7875" euler="0 0 1.57" rgba="0.7 0.7 0.7 1"></geom>
@@ -109,13 +110,13 @@
 
         <body name='object_1'>
             <geom name='object_geom_1' type="box" pos="0.75 0.0 0.013" quat="1 0 0 0" solimp="0.99 0.99 0.01"
-                  solref="0.01 1" size="0.05 0.05 0.013" friction="0.3"/>
+                  solref="0.01 1" size="0.05 0.05 0.013" friction="0.7"/>
             <freejoint/>
         </body>
 
         <body name='Wall'>
             <geom name='object_geom_2' type="box" pos="0.81 0.0 0.0" quat="1 0 0 0" solimp="0.99 0.99 0.01"
-                  solref="0.01 1" size="0.01 0.5 0.2" friction="0.3"/>
+                  solref="0.01 1" size="0.01 0.5 0.2" friction="0.7"/>
         </body>
 
     </worldbody>
