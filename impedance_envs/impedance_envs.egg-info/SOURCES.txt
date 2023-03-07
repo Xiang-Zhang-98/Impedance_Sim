@@ -6,6 +6,8 @@ impedance_envs.egg-info/dependency_links.txt
 impedance_envs.egg-info/requires.txt
 impedance_envs.egg-info/top_level.txt
 impedance_envs/envs/Fanuc_peg_hole.py
+impedance_envs/envs/Fanuc_pivoting.py
+impedance_envs/envs/Fanuc_pivoting_easy_setup.py
 impedance_envs/envs/lrmate_kine_base.py
 impedance_envs/envs/trajectory_cubic.py
 impedance_envs/envs/trajectory_cubic_bk.py

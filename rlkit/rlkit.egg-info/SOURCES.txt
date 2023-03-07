@@ -5,6 +5,8 @@ examples/__init__.py
 examples/ddpg.py
 examples/dqn_and_double_dqn.py
 examples/sac.py
+examples/sac_pivoting.py
+examples/sac_pivoting_easy.py
 examples/td3.py
 rlkit/__init__.py
 rlkit/pythonplusplus.py
