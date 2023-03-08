@@ -111,7 +111,7 @@ class Fanuc_peg_in_hole(gym.Env):
         self.obs_high = np.array(self.obs_high)
         self.observation_space = spaces.Box(low=-1., high=1., shape=self.get_RL_obs().shape, dtype=np.float32)
         self.action_space = spaces.Box(low=-np.ones(12), high=np.ones(12), dtype=np.float32)
-        self.action_vel_high = 0.1 * np.ones(6)
+        self.action_vel_high = 0.1 * np.array([1,1,0,1,1,1])
         self.action_vel_low = -0.1 * np.ones(6)
         self.action_kp_high = 20 * np.array([1,1,1,10,10,10])
         self.action_kp_low = 1 * np.array([1,1,1,10,10,10])
@@ -229,14 +229,19 @@ class Fanuc_peg_in_hole(gym.Env):
                 done = False
                 self.adm_pose_ref = self.pose_vel[:7]
                 self.adm_vel_ref = desired_vel
+                self.adm_pose_ref[:3] = self.adm_pose_ref[:3] + 0.01 * self.moving_pos_threshold * desired_vel[:3] / np.linalg.norm(
+                    desired_vel[:3], ord=2)
+                adm_eul = trans_eul.quat2euler(self.pose_vel[3:7]) + 1/ 180 * np.pi * self.moving_ori_threshold * desired_vel[3:6]/np.linalg.norm(desired_vel[3:6], ord=2)
+                self.adm_pose_ref[3:7] = trans_eul.euler2quat(adm_eul[0], adm_eul[1], adm_eul[2], axes='sxyz')
+                self.adm_vel_ref = 0*desired_vel
                 target_joint_vel = self.admittance_control()
 
             # # self.adm_kp = desired_kp
             # # self.adm_kd = np.sqrt(np.multiply(self.adm_kp, self.adm_m))
             # self.adm_pose_ref = self.pose_vel[:7]
-            # # self.adm_pose_ref[:3] = self.adm_pose_ref[:3] + 0.02*self.moving_pos_threshold*desired_vel[:3]/np.linalg.norm(desired_vel[:3], ord=2)
-            # # adm_eul = trans_eul.quat2euler(self.pose_vel[3:7]) + 2/ 180 * np.pi * self.moving_ori_threshold * desired_vel[3:6]/np.linalg.norm(desired_vel[3:6], ord=2)
-            # # self.adm_pose_ref[3:7] = trans_eul.euler2quat(adm_eul[0], adm_eul[1], adm_eul[2], axes='sxyz')
+            # self.adm_pose_ref[:3] = self.adm_pose_ref[:3] + 0.02*self.moving_pos_threshold*desired_vel[:3]/np.linalg.norm(desired_vel[:3], ord=2)
+            # adm_eul = trans_eul.quat2euler(self.pose_vel[3:7]) + 2/ 180 * np.pi * self.moving_ori_threshold * desired_vel[3:6]/np.linalg.norm(desired_vel[3:6], ord=2)
+            # self.adm_pose_ref[3:7] = trans_eul.euler2quat(adm_eul[0], adm_eul[1], adm_eul[2], axes='sxyz')
             # self.adm_vel_ref = desired_vel
             # # Adm or vel ctl?
             # target_joint_vel = self.admittance_control()
