@@ -211,7 +211,7 @@ class Fanuc_peg_in_hole(gym.Env):
                 desired_vel[5] = -self.action_vel_high[5] * np.sign(ob[5])
                 off_work_space = True
             if ob[2] > self.work_space_z_limit:
-                desired_vel[2] = -self.action_vel_high[2]
+                desired_vel[2] = -0.1#-self.action_vel_high[2]
                 off_work_space = True
             # check done
             if np.linalg.norm(ob[0:3] - self.goal) < 0.3:
@@ -231,7 +231,7 @@ class Fanuc_peg_in_hole(gym.Env):
                 self.adm_vel_ref = desired_vel
                 self.adm_pose_ref[:3] = self.adm_pose_ref[:3] + 0.01 * self.moving_pos_threshold * desired_vel[:3] / np.linalg.norm(
                     desired_vel[:3], ord=2)
-                adm_eul = trans_eul.quat2euler(self.pose_vel[3:7]) + 1/ 180 * np.pi * self.moving_ori_threshold * desired_vel[3:6]/np.linalg.norm(desired_vel[3:6], ord=2)
+                adm_eul = trans_eul.quat2euler(self.pose_vel[3:7]) + 2/ 180 * np.pi * self.moving_ori_threshold * desired_vel[3:6]/np.linalg.norm(desired_vel[3:6], ord=2)
                 self.adm_pose_ref[3:7] = trans_eul.euler2quat(adm_eul[0], adm_eul[1], adm_eul[2], axes='sxyz')
                 self.adm_vel_ref = 0*desired_vel
                 target_joint_vel = self.admittance_control()
@@ -251,6 +251,9 @@ class Fanuc_peg_in_hole(gym.Env):
             self.sim_step()
 
         ob = self.get_RL_obs()
+        print("state", ob)
+        print("action", desired_vel)
+        time.sleep(2)
         # evalute reward
         dist = np.linalg.norm(ob[0:3] - self.goal)
         # print(dist)
@@ -262,7 +265,7 @@ class Fanuc_peg_in_hole(gym.Env):
             done = False
             reward = np.power(10, 1 - dist)
         # reward = -dist
-        if self.evaluation and dist < 0.5:
+        if self.evaluation and np.linalg.norm(ob[2] - self.goal[2]) < 0.3:
             done = True
         # print(reward)
         return ob, reward, done, dict(reward_dist=reward)

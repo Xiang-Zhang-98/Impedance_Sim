@@ -55,3 +55,9 @@ ERROR: Expired activation key
 Mon Mar  6 15:59:06 2023
 ERROR: Expired activation key
 
+Tue Mar  7 21:30:17 2023
+ERROR: Missing or invalid license activation
+
+Tue Mar  7 21:31:17 2023
+ERROR: Missing or invalid license activation
+
