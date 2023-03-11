@@ -61,3 +61,18 @@ ERROR: Missing or invalid license activation
 Tue Mar  7 21:31:17 2023
 ERROR: Missing or invalid license activation
 
+Wed Mar  8 18:29:11 2023
+ERROR: Missing or invalid license activation
+
+Fri Mar 10 15:05:30 2023
+WARNING: Nan, Inf or huge value in QACC at DOF 8. The simulation is unstable. Time = 231.1300.
+
+Fri Mar 10 15:12:56 2023
+WARNING: Nan, Inf or huge value in QACC at DOF 8. The simulation is unstable. Time = 23.4000.
+
+Fri Mar 10 15:18:33 2023
+WARNING: Nan, Inf or huge value in QACC at DOF 8. The simulation is unstable. Time = 114.7000.
+
+Fri Mar 10 15:20:55 2023
+WARNING: Nan, Inf or huge value in QACC at DOF 8. The simulation is unstable. Time = 26.4100.
+

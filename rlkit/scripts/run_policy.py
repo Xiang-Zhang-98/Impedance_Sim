@@ -6,10 +6,34 @@ import uuid
 from rlkit.core import logger
 import impedance_envs
 import gym
-
+import numpy as np
 
 filename = str(uuid.uuid4())
 
+
+def evaluate(env, agent, H=20,episodes=1):
+    returns = []
+    paths = []
+    verbose = True
+    terminals =[]
+    for _ in range(episodes):
+        if verbose:
+            print("new path")
+        state = env.reset()
+        max_steps = H
+        total_reward = 0.
+        for i in range(max_steps):
+            action,_ = agent.get_action(state)
+            # action = np.array([1, 0, 0.2, 1, 1, 1])
+            if verbose:
+                print(action)
+                # print(state)
+            state, reward, terminal, _ = env.step(action)
+            if terminal:
+                break
+        print(terminal)
+        terminals.append(terminal)
+    return paths
 
 def simulate_policy(args):
     data = torch.load(args.file)
@@ -32,11 +56,12 @@ def simulate_policy(args):
             if args.gpu:
                 set_gpu_mode(True)
                 policy.cuda()
-        path = rollout(
-            env,
-            policy,
-            max_path_length=args.H,
-        )
+        evaluate(env, policy, H=args.H)
+        # path = rollout(
+        #     env,
+        #     policy,
+        #     max_path_length=args.H,
+        # )
         if hasattr(env, "log_diagnostics"):
             env.log_diagnostics([path])
         logger.dump_tabular()
