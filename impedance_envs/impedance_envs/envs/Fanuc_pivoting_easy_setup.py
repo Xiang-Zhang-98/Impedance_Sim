@@ -95,6 +95,9 @@ class Fanuc_pivoting(gym.Env):
         self.work_space_origin_rotm = np.array([[0.0423, -0.2853, 0.9575],
                                                 [-0.2853, 0.9150, 0.2853],
                                                 [-0.9575, -0.2853, -0.0427]])
+        self.force_frame_offset = np.array([[-1, 0, 0],
+                                            [0, -1, 0],
+                                            [0, 0, -1]])
         # np.array([[0,0,1], [0,1,0], [-1,0,0]])
         self.goal = np.array([0, 0, 1])
         self.goal_ori = np.array([[0, 0, 1],
@@ -121,7 +124,7 @@ class Fanuc_pivoting(gym.Env):
         self.action_space = spaces.Box(low=-np.ones(6), high=np.ones(6), dtype=np.float32)
         self.action_vel_high = 0.1 * np.ones(3)
         self.action_vel_low = -0.1 * np.ones(3)
-        self.action_kp_high = 20 * np.array([1, 1, 1])
+        self.action_kp_high = 200 * np.array([1, 1, 1])
         self.action_kp_low = 1 * np.array([1, 1, 1])
 
         # initialize the simulation
@@ -175,7 +178,7 @@ class Fanuc_pivoting(gym.Env):
         eef_eul = trans_eul.mat2euler(eef_rotm)
         world_force = np.zeros(6)
         eef_force = self.force_sensor_data - self.force_offset
-        world_force[:3] = eef_world_rotm @ eef_force
+        world_force[:3] = self.force_frame_offset@eef_world_rotm @ eef_force
         # print(world_force)
         if self.force_noise:
             world_force = world_force + np.random.normal(0, self.force_noise_level, 6)
@@ -442,7 +445,7 @@ class Fanuc_pivoting(gym.Env):
         world_force = np.zeros(6)
         force_limit = np.array([10, 10, 10, 1, 1, 1])
         eef_force = self.force_sensor_data - self.force_offset
-        world_force[:3] = eef_rotm @ eef_force
+        world_force[:3] = self.force_frame_offset@eef_rotm @ eef_force
         world_force = np.clip(world_force, -force_limit, force_limit)
 
         # dynamics
