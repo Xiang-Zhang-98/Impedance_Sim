@@ -123,9 +123,9 @@ class Fanuc_pivoting(gym.Env):
         self.observation_space = spaces.Box(low=-1., high=1., shape=self.get_RL_obs().shape, dtype=np.float32)
         self.action_space = spaces.Box(low=-np.ones(6), high=np.ones(6), dtype=np.float32)
         self.action_vel_high = 0.1 * np.ones(3)
-        self.action_vel_low = -0.1 * np.ones(3)
+        self.action_vel_low = -0.1 * np.array([0, 1, 1])
         self.action_kp_high = 200 * np.array([1, 1, 1])
-        self.action_kp_low = 1 * np.array([1, 1, 1])
+        self.action_kp_low = 100 * np.array([1, 1, 1])
 
         # initialize the simulation
         self.n_step = 0

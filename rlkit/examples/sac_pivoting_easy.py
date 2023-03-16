@@ -115,6 +115,6 @@ if __name__ == "__main__":
             use_automatic_entropy_tuning=True,
         ),
     )
-    setup_logger('Fanuc_pivoting_easy', variant=variant)
+    setup_logger('Fanuc_pivoting_easy_correct_ctl', variant=variant)
     ptu.set_gpu_mode(True)  # optionally set the GPU (default=False)
     experiment(variant)

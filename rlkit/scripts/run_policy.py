@@ -24,7 +24,8 @@ def evaluate(env, agent, H=20,episodes=1):
         total_reward = 0.
         for i in range(max_steps):
             action,_ = agent.get_action(state)
-            # action = np.array([0, 0, -1, 1, 1, 1])
+            # action = np.array([0, 0, 1, 1, 1, 1])
+            # action = np.array([-1, 0, 0, 1, 1, 1])
             if verbose:
                 print(action)
                 print(state[-6:])
