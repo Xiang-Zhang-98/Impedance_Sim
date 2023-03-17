@@ -29,9 +29,9 @@ class insertion_primitive(object):
         self.Mass = np.array([2,2,2])*1.5    # to determine
         self.Inertia = 1*np.array([2, 2, 2])   # to determine
         # self.goal_pose = np.array([0.56046,-0.00418,-0.1256])
-        self.true_goal_pose = np.array([0.547,0.0,-0.15768])
+        self.true_goal_pose = np.array([0.558,0.0,-0.15768])
         self.noise_level = 0.0
-        self.goal_pose = np.array([0.547,0.0,-0.15768])
+        self.goal_pose = np.array([0.558,0.0,-0.15768])
         self.Kp = np.array([200,200,200,200,200,200])
         self.Kd = np.array([500,500,500,250,250,250])
         self.offset = np.array([[1, 0, 0], [0, -1, 0], [0, 0, -1]])
@@ -96,8 +96,10 @@ class insertion_primitive(object):
             print(state)
             # get velocity cmd
             vel_cmd, kp, action = self.get_primitive(state)
-            if vel_cmd[2]>0:
-                vel_cmd[2] = -0.1
+
+            vel_cmd[-1] = - vel_cmd[-1]
+            # if vel_cmd[2]>0:
+            #     vel_cmd[2] = -0.1
 
             # recording data
             data["observations"].append(state)
@@ -159,7 +161,7 @@ class insertion_primitive(object):
         print("Reset finished")
 
     def load_agent(self):
-        data = torch.load('/home/fanuc/Xiang/Impedance_Sim/rlkit/data/Fanuc-peg-in-hole-random-peg-pos-w-uncertainty/Fanuc_peg_in_hole_random_peg_pos_w_uncertainty_2023_02_23_20_15_25_0000--s-0/params.pkl')
+        data = torch.load('/home/fanuc/Xiang/Impedance_Sim/rlkit/data/Fanuc-peg-in-hole-random-peg-pos-w-uncertainty-f=0.3-correct-ctl/Fanuc_peg_in_hole_random_peg_pos_w_uncertainty_f=0.3_correct_ctl_2023_03_16_16_02_09_0000--s-0/params.pkl')
         self.agent = data['evaluation/policy']
         # self.env = data['evaluation/env']
         from rlkit.torch.pytorch_util import set_gpu_mode
@@ -179,7 +181,8 @@ class insertion_primitive(object):
         World_torque = TCP_rotm @ TCP_wrench[3:6]*0 # *0 to cancel torque
 
         # saturate force to make reral like sim
-        World_force = 10* np.clip(World_force, -1,1)
+        # World_force = 10* np.clip(World_force, -1,1)
+        World_force = -World_force
         state = np.hstack([TCP_pos,TCP_euler,TCP_vel,World_force,World_torque])
         state[0:3] = state[0:3] - self.goal_pose
         # keep in mind, the unit of state in simulation is cm. However, the real robot uses m.
