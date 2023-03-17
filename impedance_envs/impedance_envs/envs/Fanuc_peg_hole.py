@@ -90,13 +90,16 @@ class Fanuc_peg_in_hole(gym.Env):
                                                 [-0.2853, 0.9150, 0.2853],
                                                 [-0.9575, -0.2853, -0.0427]])
             # np.array([[0,0,1], [0,1,0], [-1,0,0]])
+        self.force_frame_offset = np.array([[-1, 0, 0],
+                                            [0, -1, 0],
+                                            [0, 0, -1]])
         self.goal = np.array([0, 0, 1])
         self.goal_ori = np.array([0, 0, 0])
         self.noise_level = 0.2
         self.ori_noise_level = 0.5
         self.use_noisy_state = True
         self.state_offset = np.zeros(18)
-        self.force_noise = False
+        self.force_noise = True
         self.force_noise_level = 0.2
         self.force_limit = 10 #2
         self.evaluation = self.Render
@@ -113,7 +116,7 @@ class Fanuc_peg_in_hole(gym.Env):
         self.action_space = spaces.Box(low=-np.ones(12), high=np.ones(12), dtype=np.float32)
         self.action_vel_high = 0.1 * np.array([1,1,0,1,1,1])
         self.action_vel_low = -0.1 * np.ones(6)
-        self.action_kp_high = 20 * np.array([1,1,1,10,10,10])
+        self.action_kp_high = 200 * np.array([1,1,1,10,10,10])
         self.action_kp_low = 1 * np.array([1,1,1,10,10,10])
 
         # initialize the simulation
@@ -160,7 +163,7 @@ class Fanuc_peg_in_hole(gym.Env):
         eef_eul = trans_eul.mat2euler(eef_rotm)
         world_force = np.zeros(6)
         eef_force = self.force_sensor_data - self.force_offset
-        world_force[:3] = eef_world_rotm @ eef_force
+        world_force[:3] = self.force_frame_offset @ eef_world_rotm @ eef_force
         if self.force_noise:
             world_force = world_force + np.random.normal(0, self.force_noise_level, 6)
         world_force = np.clip(world_force, -10, 10)
@@ -434,7 +437,7 @@ class Fanuc_peg_in_hole(gym.Env):
         world_force = np.zeros(6)
         force_limit = np.array([10,10,10,1,1,1])
         eef_force = self.force_sensor_data - self.force_offset
-        world_force[:3] = eef_rotm @ eef_force
+        world_force[:3] = self.force_frame_offset @ eef_rotm @ eef_force
         world_force = np.clip(world_force, -force_limit, force_limit)
 
         # dynamics

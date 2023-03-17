@@ -114,6 +114,6 @@ if __name__ == "__main__":
             use_automatic_entropy_tuning=True,
         ),
     )
-    setup_logger('Fanuc_peg_in_hole_random_peg_pos_w_uncertainty_f=0.3', variant=variant)
+    setup_logger('Fanuc_peg_in_hole_random_peg_pos_w_uncertainty_f=0.3_correct_ctl', variant=variant)
     ptu.set_gpu_mode(True)  # optionally set the GPU (default=False)
     experiment(variant)
