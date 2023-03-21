@@ -45,7 +45,7 @@ class insertion_primitive(object):
         #experiment settings
         self.moving_pos_limit = 2.5
         self.moving_ori_limit = 4/180*np.pi
-        self.execute_time = 10
+        self.execute_time = 5
         self.max_steps = 40
         self.contact_time_limit = 2
 

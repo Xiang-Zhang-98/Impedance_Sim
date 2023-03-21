@@ -26,13 +26,12 @@ class insertion_primitive(object):
     def __init__(self):
         self.record = True
         self.controller = robot_controller()
-        self.Mass = np.array([2,2,2])*1.5    # to determine
+        self.Mass = np.array([2,2,2])*3    # to determine
         self.Inertia = 1*np.array([2, 2, 2])   # to determine
         # self.goal_pose = np.array([0.56046,-0.00418,-0.1256])
-        self.true_goal_pose = np.array([0.558,0.0,-0.15768])
-        self.noise_level = 0.0
-        self.goal_pose = np.array([0.558,0.0,-0.15768])
-        self.Kp = np.array([200,200,200,200,200,200])
+        self.work_space_origin = np.array([0.65, 0.0, 0.0])
+
+        self.Kp = np.array([300,300,300,200,200,200])
         self.Kd = np.array([300,300,300,250,250,250])
         self.offset = np.array([[1, 0, 0], [0, -1, 0], [0, 0, -1]])
 
@@ -43,10 +42,10 @@ class insertion_primitive(object):
         self.load_agent()
 
         #experiment settings
-        self.moving_pos_limit = 2.5
+        self.moving_pos_limit = 2.5/100
         self.moving_ori_limit = 4/180*np.pi
         self.execute_time = 5
-        self.max_steps = 40
+        self.max_steps = 4
         self.contact_time_limit = 2
 
         # Sim-to-real
@@ -71,8 +70,8 @@ class insertion_primitive(object):
     def get_primitive(self,state):
         action, _ = self.agent.get_action(state)
         # print(velcmd)
-        velcmd = action[:6]
-        kp = action[6:]
+        velcmd = action[:3]
+        kp = action[3:]
         return velcmd, kp, None
 
     def experiment(self, init_time):
@@ -89,17 +88,14 @@ class insertion_primitive(object):
         )
         begin_time = time.time()
         print("Begin one experiment")
-        self.goal_pose[0:2] = self.true_goal_pose[0:2] + np.random.normal(0,self.noise_level/100,2)
         while(step < self.max_steps and not_done):
             # get robot state
             state = self.get_state()
             print(state)
             # get velocity cmd
-            vel_cmd, kp, action = self.get_primitive(state)
-
-            vel_cmd[-1] = - vel_cmd[-1]
-            # if vel_cmd[2]>0:
-            #     vel_cmd[2] = -0.1
+            # vel_cmd, kp, action = self.get_primitive(state)
+            vel_cmd = np.array([1, 0, 1])
+            kp = np.array([1, 1, 1])
 
             # recording data
             data["observations"].append(state)
@@ -107,21 +103,17 @@ class insertion_primitive(object):
             data["vel"].append(vel_cmd)
             data["kp"].append(kp)
             current_robot_pos = state[0:6]
-            current_robot_pos[0:3] = current_robot_pos[0:3] + self.goal_pose*100
+            current_robot_pos[0:3] = current_robot_pos[0:3] + self.work_space_origin
             pos_cmd = np.zeros(6)
             pos_cmd[0:3] = current_robot_pos[0:3] + vel_cmd[0:3]/np.linalg.norm(vel_cmd[0:3]+1e-6,ord = 2) * self.moving_pos_limit
-            pos_cmd[3:6] = current_robot_pos[3:6] + vel_cmd[3:6]/np.linalg.norm(vel_cmd[3:6]+1e-6,ord = 2) * self.moving_ori_limit
+            pos_cmd[3:6] = current_robot_pos[3:6]
             print(pos_cmd)
             begin_time = time.time()
             not_contacted = True
             not_done = True
-            contact_time = None
             while(time.time() - begin_time < self.execute_time and not_contacted):
                 self.send_commend(pos_cmd[0:3],pos_cmd[3:6],np.zeros(6))
                 state = self.get_state()
-                delta_2_goal = np.abs(state[2] - 1)
-                if delta_2_goal<0.5:
-                    not_done = False
 
             print("Finished one primitive, select another one")
             step = step+1
@@ -141,17 +133,24 @@ class insertion_primitive(object):
         print(not not_done)
 
     def reset(self):
-        angle = np.pi/180*0
-        yaw = np.random.uniform(low=-np.pi / 180 * 5, high=np.pi / 180 * 5)
-        l = np.array([3,3,0.5])
+        init_c_pose = np.array([0.65, 0.0, -0.314])
+        l = np.array([3, 0, 0.5]) / 100
         cube = np.random.uniform(low=-l, high=l)
-        mb = (cube + np.array([0,0,3.5]))/100 + self.goal_pose
+        init_c_pose[0:3] = init_c_pose[0:3] + cube
+        mb = init_c_pose
         delta_pose = 10
         TCP_d_pos = mb
-        TCP_d_euler = np.array([0,angle,yaw])
+        TCP_d_euler = np.array([0,0,0])
         TCP_d_vel = np.zeros(6)
         d_rotm = R.from_euler('xyz', TCP_d_euler).as_matrix()
         TCP_d_euler = R.from_matrix(d_rotm @ self.offset).as_euler('ZYX')
+        while(delta_pose>0.001):
+            UDP_cmd = np.hstack([TCP_d_pos+np.array([0, 0, 0.1]), TCP_d_euler, TCP_d_vel, self.Kp, self.Kd, self.Mass, self.Inertia])
+            self.controller.send(UDP_cmd)
+
+            self.controller.receive()
+            delta_pose = np.linalg.norm(TCP_d_pos+np.array([0, 0, 0.1])-self.controller.robot_pose[0:3])
+        delta_pose = 10
         while(delta_pose>0.001):
             UDP_cmd = np.hstack([TCP_d_pos, TCP_d_euler, TCP_d_vel, self.Kp, self.Kd, self.Mass, self.Inertia])
             self.controller.send(UDP_cmd)
@@ -183,18 +182,19 @@ class insertion_primitive(object):
         # saturate force to make reral like sim
         # World_force = 10* np.clip(World_force, -1,1)
         World_force = -World_force
-        state = np.hstack([TCP_pos,TCP_euler,TCP_vel,World_force,World_torque])
-        state[0:3] = state[0:3] - self.goal_pose
-        # keep in mind, the unit of state in simulation is cm. However, the real robot uses m.
-        state[0:3] = state[0:3] * 100
-        # state[6:9] = state[6:9] * 100
+
+        # No pose estimation of obj for now
+        obj_pos = np.array([0.7, 0, 0])
+        obj_eul = np.array([0.0, 0, 0])
+        state = np.hstack([TCP_pos,TCP_euler, obj_pos, obj_eul,World_force,World_torque])
+        state[0:3] = state[0:3] - self.work_space_origin
         return state
 
     def send_commend(self, TCP_d_pos, TCP_d_euler, TCP_d_vel):
-        TCP_d_pos, TCP_d_euler, TCP_d_vel = self.workspace_limit(TCP_d_pos, TCP_d_euler, TCP_d_vel)
+        # TCP_d_pos, TCP_d_euler, TCP_d_vel = self.workspace_limit(TCP_d_pos, TCP_d_euler, TCP_d_vel)
         d_rotm = R.from_euler('xyz', TCP_d_euler).as_matrix()
         TCP_d_euler = R.from_matrix(d_rotm @ self.offset).as_euler('ZYX')
-        UDP_cmd = np.hstack([TCP_d_pos/100, TCP_d_euler, TCP_d_vel, self.Kp, self.Kd, self.Mass, self.Inertia])
+        UDP_cmd = np.hstack([TCP_d_pos, TCP_d_euler, TCP_d_vel, self.Kp, self.Kd, self.Mass, self.Inertia])
         self.controller.send(UDP_cmd)
 
 if __name__ == "__main__":
@@ -202,11 +202,11 @@ if __name__ == "__main__":
     now = datetime.now()
     current_time = now.strftime("%y-%m-%d")
     from pathlib import Path
-    Path("exp_data/"+current_time+"/Fance_peg_in_hole").mkdir(parents=True, exist_ok=True)
-    filename = 'exp_data/'+current_time+"/Fance_peg_in_hole"+'/init_time.pkl'
+    Path("exp_data/"+current_time+"/Fance_pivoting").mkdir(parents=True, exist_ok=True)
+    filename = 'exp_data/'+current_time+"/Fance_pivoting"+'/init_time.pkl'
     with open(filename, 'wb') as f:
         joblib.dump(current_time, f)
     for i in range(10):
         prm.reset()
-        prm.experiment(current_time+"/Fance_peg_in_hole")
+        prm.experiment(current_time+"/Fance_pivoting")
     
