@@ -44,6 +44,8 @@ def simulate_policy(args):
         env = gym.make('Fanuc_peg_in_hole-v0',render=True)
     elif args.env == "pivoting":
         env = gym.make('Fanuc_pivoting-v0',render=True)
+    elif args.env == "pivoting_v2":
+        env = gym.make('Fanuc_pivoting-v2',render=True)
     elif args.env == "pivoting_easy":
         env = gym.make('Fanuc_pivoting_easy-v0',render=True)
     print("Policy loaded")
