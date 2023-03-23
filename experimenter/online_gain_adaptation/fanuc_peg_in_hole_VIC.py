@@ -109,7 +109,7 @@ class insertion_primitive(object):
             
             # change kp kd
             self.Kp[:3] = kp[:3]
-            self.Kd[:3] = 15 * np.sqrt(np.multiply(self.Kp[:3], self.Mass))
+            self.Kd[:3] = 2 * np.sqrt(np.multiply(self.Kp[:3], self.Mass))
             # recording data
             data["observations"].append(state)
             # data["primitive_id"].append(action)

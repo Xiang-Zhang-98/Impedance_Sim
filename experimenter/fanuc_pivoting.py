@@ -26,10 +26,10 @@ class insertion_primitive(object):
     def __init__(self):
         self.record = True
         self.controller = robot_controller()
-        self.Mass = np.array([2,2,2])*3    # to determine
+        self.Mass = np.array([2,2,2])*2   # to determine
         self.Inertia = 1*np.array([2, 2, 2])   # to determine
         # self.goal_pose = np.array([0.56046,-0.00418,-0.1256])
-        self.work_space_origin = np.array([0.65, 0.0, 0.0])
+        self.work_space_origin = np.array([0.65, 0.0, -0.314])
 
         self.Kp = np.array([300,300,300,200,200,200])
         self.Kd = np.array([300,300,300,250,250,250])
@@ -45,11 +45,16 @@ class insertion_primitive(object):
         self.moving_pos_limit = 2.5/100
         self.moving_ori_limit = 4/180*np.pi
         self.execute_time = 5
-        self.max_steps = 4
+        self.max_steps = 10
         self.contact_time_limit = 2
 
         # Sim-to-real
         self.sim2real = False
+
+        self.action_vel_high = 0.1 * np.ones(3)
+        self.action_vel_low = -0.1 * np.array([0, 1, 0])
+        self.action_kp_high = 200 * np.array([1, 1, 1])
+        self.action_kp_low = 100 * np.array([1, 1, 1])
 
     def workspace_limit(self,TCP_d_pos, TCP_d_euler, TCP_d_vel):
         # unit is cm
@@ -69,9 +74,14 @@ class insertion_primitive(object):
 
     def get_primitive(self,state):
         action, _ = self.agent.get_action(state)
+        velcmd = np.clip(action[:3], -1, 1)
+        kp = np.clip(action[3:6], -1, 1)
+        velcmd = (self.action_vel_high + self.action_vel_low) / 2 + np.multiply(velcmd, (
+                self.action_vel_high - self.action_vel_low) / 2)
+        kp = (self.action_kp_high + self.action_kp_low) / 2 + np.multiply(kp, (
+                self.action_kp_high - self.action_kp_low) / 2)
         # print(velcmd)
-        velcmd = action[:3]
-        kp = action[3:]
+        velcmd[1] = 0
         return velcmd, kp, None
 
     def experiment(self, init_time):
@@ -93,9 +103,9 @@ class insertion_primitive(object):
             state = self.get_state()
             print(state)
             # get velocity cmd
-            # vel_cmd, kp, action = self.get_primitive(state)
-            vel_cmd = np.array([1, 0, 1])
-            kp = np.array([1, 1, 1])
+            vel_cmd, kp, action = self.get_primitive(state)
+            # vel_cmd = np.array([1, 0, 1])
+            # kp = np.array([1, 1, 1])
 
             # recording data
             data["observations"].append(state)
@@ -107,7 +117,7 @@ class insertion_primitive(object):
             pos_cmd = np.zeros(6)
             pos_cmd[0:3] = current_robot_pos[0:3] + vel_cmd[0:3]/np.linalg.norm(vel_cmd[0:3]+1e-6,ord = 2) * self.moving_pos_limit
             pos_cmd[3:6] = current_robot_pos[3:6]
-            print(pos_cmd)
+            print(vel_cmd)
             begin_time = time.time()
             not_contacted = True
             not_done = True
@@ -136,7 +146,7 @@ class insertion_primitive(object):
         init_c_pose = np.array([0.65, 0.0, -0.314])
         l = np.array([3, 0, 0.5]) / 100
         cube = np.random.uniform(low=-l, high=l)
-        init_c_pose[0:3] = init_c_pose[0:3] + cube
+        init_c_pose[0:3] = init_c_pose[0:3] + 0*cube
         mb = init_c_pose
         delta_pose = 10
         TCP_d_pos = mb
@@ -160,7 +170,7 @@ class insertion_primitive(object):
         print("Reset finished")
 
     def load_agent(self):
-        data = torch.load('/home/fanuc/Xiang/Impedance_Sim/rlkit/data/Fanuc-peg-in-hole-random-peg-pos-w-uncertainty-f=0.3-correct-ctl/Fanuc_peg_in_hole_random_peg_pos_w_uncertainty_f=0.3_correct_ctl_2023_03_16_16_02_09_0000--s-0/params.pkl')
+        data = torch.load('/home/fanuc/Xiang/Impedance_Sim/rlkit/data/Fanuc-pivoting-v2/Fanuc_pivoting_v2_2023_03_21_22_25_46_0000--s-0/params.pkl')
         self.agent = data['evaluation/policy']
         # self.env = data['evaluation/env']
         from rlkit.torch.pytorch_util import set_gpu_mode
@@ -181,12 +191,12 @@ class insertion_primitive(object):
 
         # saturate force to make reral like sim
         # World_force = 10* np.clip(World_force, -1,1)
-        World_force = -World_force
+        World_force = World_force/10
 
         # No pose estimation of obj for now
         obj_pos = np.array([0.7, 0, 0])
         obj_eul = np.array([0.0, 0, 0])
-        state = np.hstack([TCP_pos,TCP_euler, obj_pos, obj_eul,World_force,World_torque])
+        state = np.hstack([TCP_pos,0*TCP_euler,World_force,World_torque])
         state[0:3] = state[0:3] - self.work_space_origin
         return state
 

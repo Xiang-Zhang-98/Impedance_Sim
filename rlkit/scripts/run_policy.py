@@ -28,7 +28,7 @@ def evaluate(env, agent, H=20,episodes=1):
             # action = np.array([-1, 0, 0, 1, 1, 1])
             if verbose:
                 print(action)
-                print(state[-6:])
+                print(state)
             state, reward, terminal, _ = env.step(action)
             if terminal:
                 break
