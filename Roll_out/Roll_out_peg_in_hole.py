@@ -49,7 +49,7 @@ if __name__ == "__main__":
     parser.add_argument('--episodes', type=int, default=100)
     args = parser.parse_args()
 
-    env = gym.make('Fanuc_peg_in_hole-v0',render=True)
+    env = gym.make('Fanuc_peg_in_hole-v0',render=False)
     policy = torch.load(args.file)['evaluation/policy']
     print("Policy loaded")
     if args.gpu:

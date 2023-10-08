@@ -88,3 +88,15 @@ ERROR: Missing or invalid license activation
 Thu Mar 16 17:15:23 2023
 ERROR: Missing or invalid license activation
 
+Sun Oct  8 15:39:53 2023
+ERROR: Could not open activation key file (null)
+
+Sun Oct  8 15:49:41 2023
+ERROR: Could not open activation key file /home/home/xzhang/.mujoco/mjkey.txt
+
+Sun Oct  8 15:50:03 2023
+ERROR: Could not open activation key file /home/home/xzhang/.mujoco/mjkey.txt
+
+Sun Oct  8 15:50:25 2023
+ERROR: Could not initialize GLFW
+

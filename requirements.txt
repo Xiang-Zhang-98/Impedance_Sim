@@ -28,7 +28,7 @@ h5py==2.10.0
 html5lib==0.9999999
 idna==2.7
 imageio==2.5.0
--e git+https://github.com/Xiang-Zhang-98/Impedance_Sim.git@021e2fd87076770231ed98382c169470a853763d#egg=impedance_envs&subdirectory=impedance_envs
+# -e git+https://github.com/Xiang-Zhang-98/Impedance_Sim.git@021e2fd87076770231ed98382c169470a853763d#egg=impedance_envs&subdirectory=impedance_envs
 importlib-metadata==6.0.0
 ipython-genutils==0.2.0
 itsdangerous==0.24
@@ -69,13 +69,13 @@ python-dateutil==2.7.3
 pytz==2018.5
 requests==2.19.1
 retrying==1.3.3
--e git+https://github.com/Xiang-Zhang-98/Impedance_Sim.git@021e2fd87076770231ed98382c169470a853763d#egg=rlkit&subdirectory=rlkit
+#-e git+https://github.com/Xiang-Zhang-98/Impedance_Sim.git@021e2fd87076770231ed98382c169470a853763d#egg=rlkit&subdirectory=rlkit
 s3transfer==0.1.13
 scipy==1.6.3
 six==1.12.0
 termcolor==1.1.0
-torch==1.10.0+cu113
-torchvision==0.11.1+cu113
+#torch==1.10.0+cu113
+#torchvision==0.11.1+cu113
 tqdm==4.25.0
 traitlets==4.3.2
 transforms3d==0.3.1
