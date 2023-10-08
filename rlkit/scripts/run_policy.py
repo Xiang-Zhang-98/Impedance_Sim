@@ -11,10 +11,10 @@ import numpy as np
 filename = str(uuid.uuid4())
 
 
-def evaluate(env, agent, H=20,episodes=1):
+def evaluate(env, agent, H=20,episodes=100):
     returns = []
     paths = []
-    verbose = True
+    verbose = False
     terminals =[]
     for _ in range(episodes):
         if verbose:
@@ -34,6 +34,7 @@ def evaluate(env, agent, H=20,episodes=1):
                 break
         print(terminal)
         terminals.append(terminal)
+    print(np.sum(terminals)/len(terminals))
     return paths
 
 def simulate_policy(args):
@@ -41,7 +42,7 @@ def simulate_policy(args):
     policy = data['evaluation/policy']
     # env = data['evaluation/env']
     if args.env == "peg":
-        env = gym.make('Fanuc_peg_in_hole-v0',render=True)
+        env = gym.make('Fanuc_peg_in_hole-v0',render=False)
     elif args.env == "pivoting":
         env = gym.make('Fanuc_pivoting-v0',render=True)
     elif args.env == "pivoting_v2":

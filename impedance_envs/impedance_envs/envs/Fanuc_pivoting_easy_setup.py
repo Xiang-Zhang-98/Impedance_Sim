@@ -67,8 +67,6 @@ class Fanuc_pivoting(gym.Env):
         )
 
         # initialize a PD gain, may need more effort on tunning
-        # kp = np.array([17, 17, 17, 17, 17, 17])
-        # kv = np.array([40, 40, 40, 40, 40, 40])
         kp = 20 * np.array([1, 1, 1, 1, 1, 1])
         kv = 2 * np.sqrt(kp)  # np.array([40, 40, 40, 40, 40, 40])
         self.set_pd_gain(kp, kv)

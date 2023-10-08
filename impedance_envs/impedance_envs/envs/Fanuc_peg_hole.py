@@ -62,10 +62,8 @@ class Fanuc_peg_in_hole(gym.Env):
         )
 
         # initialize a PD gain, may need more effort on tunning
-        # kp = np.array([17, 17, 17, 17, 17, 17])
-        # kv = np.array([40, 40, 40, 40, 40, 40])
         kp = 100 * np.array([1, 1, 1, 1, 1, 1])
-        kv = 2 * np.sqrt(kp)  # np.array([40, 40, 40, 40, 40, 40])
+        kv = 2 * np.sqrt(kp)  
         self.set_pd_gain(kp, kv)
 
         # initialize admittance gains
@@ -101,8 +99,8 @@ class Fanuc_peg_in_hole(gym.Env):
         self.state_offset = np.zeros(18)
         self.force_noise = True
         self.force_noise_level = 0.2
-        self.force_limit = 10 #2
-        self.evaluation = self.Render
+        self.force_limit = 10
+        self.evaluation = True #self.Render
         self.moving_pos_threshold = 2.5
         self.moving_ori_threshold = 4
 
@@ -188,16 +186,20 @@ class Fanuc_peg_in_hole(gym.Env):
         self.adm_kp = desired_kp
         self.adm_kd = 2 * np.sqrt(np.multiply(self.adm_kp, self.adm_m))
         init_ob = self.get_RL_obs()
+        # keep the same action for a short time
         for i in range(50):
             ob = self.get_RL_obs()
             curr_force = ob[12:]
             off_work_space = False
+            # Force limit constraint
             if np.abs(np.dot(curr_force, desired_vel) / np.linalg.norm(desired_vel + 1e-6, ord=2)) > self.force_limit:
                 break
             delta_ob = ob - init_ob
+            # Moving threshold
             if np.linalg.norm(delta_ob[0:3], ord=2) > self.moving_pos_threshold or np.linalg.norm(delta_ob[3:6], ord=2)\
                     > self.moving_ori_threshold / 180 * np.pi:
                 break
+            # check workspace, if out of workspace, then reverse the velocity
             if np.abs(ob[0]) > self.work_space_xy_limit:
                 desired_vel[0] = -self.action_vel_high[0] * np.sign(ob[0])
                 off_work_space = True
@@ -214,7 +216,7 @@ class Fanuc_peg_in_hole(gym.Env):
                 desired_vel[5] = -self.action_vel_high[5] * np.sign(ob[5])
                 off_work_space = True
             if ob[2] > self.work_space_z_limit:
-                desired_vel[2] = -0.1#-self.action_vel_high[2]
+                desired_vel[2] = -0.1
                 off_work_space = True
             # check done
             if np.linalg.norm(ob[0:3] - self.goal) < 0.3:
@@ -223,6 +225,7 @@ class Fanuc_peg_in_hole(gym.Env):
                 self.adm_pose_ref = self.pose_vel[:7]
                 self.adm_vel_ref = desired_vel
                 target_joint_vel = self.Cartersian_vel_control(desired_vel)
+            # if out of workspace, then use vel control to pull back
             elif off_work_space:
                 done = False
                 self.adm_pose_ref = self.pose_vel[:7]
@@ -232,35 +235,14 @@ class Fanuc_peg_in_hole(gym.Env):
                 done = False
                 self.adm_pose_ref = self.pose_vel[:7]
                 self.adm_vel_ref = desired_vel
-                # self.adm_pose_ref[:3] = self.adm_pose_ref[:3] + 0.01 * self.moving_pos_threshold * desired_vel[:3] / np.linalg.norm(
-                #     desired_vel[:3], ord=2)
-                # adm_eul = trans_eul.quat2euler(self.pose_vel[3:7]) + 2/ 180 * np.pi * self.moving_ori_threshold * desired_vel[3:6]/np.linalg.norm(desired_vel[3:6], ord=2)
-                # self.adm_pose_ref[3:7] = trans_eul.euler2quat(adm_eul[0], adm_eul[1], adm_eul[2], axes='sxyz')
-                # self.adm_vel_ref = 0*desired_vel
                 target_joint_vel = self.admittance_control()
-
-            # # self.adm_kp = desired_kp
-            # # self.adm_kd = np.sqrt(np.multiply(self.adm_kp, self.adm_m))
-            # self.adm_pose_ref = self.pose_vel[:7]
-            # self.adm_pose_ref[:3] = self.adm_pose_ref[:3] + 0.02*self.moving_pos_threshold*desired_vel[:3]/np.linalg.norm(desired_vel[:3], ord=2)
-            # adm_eul = trans_eul.quat2euler(self.pose_vel[3:7]) + 2/ 180 * np.pi * self.moving_ori_threshold * desired_vel[3:6]/np.linalg.norm(desired_vel[3:6], ord=2)
-            # self.adm_pose_ref[3:7] = trans_eul.euler2quat(adm_eul[0], adm_eul[1], adm_eul[2], axes='sxyz')
-            # self.adm_vel_ref = desired_vel
-            # # Adm or vel ctl?
-            # target_joint_vel = self.admittance_control()
-            # # target_joint_vel = self.Cartersian_vel_control(desired_vel)
 
             self.set_joint_velocity(target_joint_vel)
             self.sim_step()
 
         ob = self.get_RL_obs()
-        # print("state", ob)
-        # print("action", desired_vel)
-        # time.sleep(2)
         # evalute reward
         dist = np.linalg.norm(ob[0:3] - self.goal)
-        # print(dist)
-        # time.sleep(0.5)
         if dist < 0.3:
             done = False
             reward = 10
@@ -270,7 +252,6 @@ class Fanuc_peg_in_hole(gym.Env):
         # reward = -dist
         if self.evaluation and np.linalg.norm(ob[2] - self.goal[2]) < 0.3:
             done = True
-        # print(reward)
         return ob, reward, done, dict(reward_dist=reward)
 
     def get_sim_time(self):
@@ -458,8 +439,6 @@ class Fanuc_peg_in_hole(gym.Env):
         if not ctl_ori:
             adm_vel[3:] = 0 * adm_vel[3:]
         link6_pos, link6_rotm, link6_vel = self.get_link6_pose_vel_from_eef(eef_pos, eef_rotm, adm_vel)
-        # link6_vel = adm_vel
-        # adm_vel = self.pose_vel[7:] + np.array([0.2,0,0,0,0,0])#adm_acc * T
 
         Full_Jacobian = self.full_jacobian
         Jacobian = Full_Jacobian[:6, :6]
@@ -475,8 +454,5 @@ if __name__ == "__main__":
         sim.reset()
         for i in range(20):
             action = np.random.uniform(low=-1, high=1, size=12)
-            # action = np.ones(12)
-            # action[0:6] = np.zeros(6)
-            # action[2] = -1
             sim.step(action)
     

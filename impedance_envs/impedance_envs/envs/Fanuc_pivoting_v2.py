@@ -138,7 +138,7 @@ class Fanuc_pivoting(gym.Env):
     def reset(self):
         # set eef init pose
         init_c_pose = np.array([0.65, 0.0, 0.27, 0.0, np.pi, np.pi])
-        l = np.array([3, 0, 0.5]) / 100
+        l = np.array([3, 0, 0.1]) / 100
         cube = np.random.uniform(low=-l, high=l)
         init_c_pose[0:3] = init_c_pose[0:3] + cube
         init_j_pose = IK(init_c_pose)
